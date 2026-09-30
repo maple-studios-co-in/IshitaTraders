@@ -1,0 +1,8 @@
+.next
+node_modules
+package-lock.json
+public
+src/components/icons.tsx
+tsconfig.json
+next-env.d.ts
+.claude
