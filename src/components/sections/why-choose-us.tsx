@@ -43,8 +43,8 @@ export function WhyChooseUs() {
 
         <RevealGroup as="ul" className="mt-12 grid gap-7 md:grid-cols-2 lg:mt-[108px] lg:grid-cols-3 lg:gap-[27.9px]">
           {whyUsSection.reasons.map((reason) => (
-            <RevealItem as="li" key={reason.number} className="flex">
-              <article className="flex w-full flex-col justify-between gap-10 rounded-[9.3px] bg-surface p-7 shadow-card transition-[transform,box-shadow] duration-500 ease-out-expo hover:-translate-y-1.5 hover:shadow-[0_30px_60px_-30px_rgb(0_0_0/0.55)] lg:min-h-[430px]">
+            <RevealItem as="li" key={reason.number} className="lift-trigger flex">
+              <article className="lift-card flex w-full flex-col justify-between gap-10 rounded-[9.3px] bg-surface p-7 shadow-card lg:min-h-[430px]">
                 <div className="flex flex-col gap-[9.3px]">
                   <p
                     aria-hidden="true"

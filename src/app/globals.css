@@ -43,8 +43,26 @@
   --shadow-float: 0 25px 31px -6px rgb(0 0 0 / 0.1), 0 10px 12px -7px rgb(0 0 0 / 0.1);
   --shadow-panel: 0 12px 18px -4px rgb(0 0 0 / 0.1), 0 5px 7px -5px rgb(0 0 0 / 0.1);
   --shadow-faq: 0 11px 33px -5.5px rgb(16 24 40 / 0.06), 0 2.75px 8.3px -2.75px rgb(16 24 40 / 0.04);
+  /* Hover shadow of `lift-card`; drawn inside the 110% scale, so it lands as 0 40px 68px 8px on screen. */
+  --shadow-lift: 0 36px 62px 7px rgb(0 0 0 / 0.14);
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Critically damped spring (stiffness ~650, damping ~51) sampled over 300ms. */
+  --ease-lift-in: linear(
+    0,
+    0.0169 2.57%,
+    0.0758 5.9%,
+    0.2155 11.33%,
+    0.4681 20.63%,
+    0.6128 27.07%,
+    0.7263 33.57%,
+    0.8172 40.7%,
+    0.8882 49%,
+    0.9412 59.43%,
+    0.977 74.13%,
+    1
+  );
+  --ease-lift-out: cubic-bezier(0, 0, 0.58, 1);
 
   --animate-hero-zoom: hero-zoom 16s var(--ease-out-expo) both;
   --animate-rise: rise 0.9s var(--ease-out-expo) both;
@@ -157,6 +175,56 @@
 
 @utility text-balance-safe {
   text-wrap: balance;
+}
+
+/*
+ * Hover "lift", matched frame by frame to the reference recording: the card zooms to 110% and
+ * rises 10px on a fast spring (~300ms) while a soft shadow fades in, then settles back in ~110ms.
+ * Put `lift-trigger` on a wrapper that stays still: the hover then holds across the card's
+ * resting footprint, so the moving card can never flicker under the cursor. Keyboard focus
+ * inside the card lifts it as well.
+ */
+@utility lift-card {
+  --lift: 0;
+  --lift-duration: 110ms;
+  --lift-ease: var(--ease-lift-out);
+
+  position: relative;
+  translate: 0 calc(var(--lift) * -10px);
+  scale: calc(1 + var(--lift) * 0.1);
+  transition-property: translate, scale;
+  transition-duration: var(--lift-duration);
+  transition-timing-function: var(--lift-ease);
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: var(--shadow-lift);
+    opacity: var(--lift);
+    pointer-events: none;
+    transition: opacity var(--lift-duration) var(--lift-ease);
+  }
+
+  @media (hover: hover) {
+    :where(.lift-trigger:hover) & {
+      --lift: 1;
+      --lift-duration: 300ms;
+      --lift-ease: var(--ease-lift-in);
+    }
+  }
+
+  :where(.lift-trigger:has(:focus-visible)) & {
+    --lift: 1;
+    --lift-duration: 300ms;
+    --lift-ease: var(--ease-lift-in);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    translate: none;
+    scale: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
