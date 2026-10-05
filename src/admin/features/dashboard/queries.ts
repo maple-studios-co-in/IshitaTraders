@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, count, desc, eq, gte, inArray, isNotNull, lte, ne, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, inArray, isNotNull, lt, lte, ne, sql } from "drizzle-orm";
 
 import type { SeriesPoint } from "@/admin/components/ui/charts";
 import { getDb } from "@/admin/server/db/client";
@@ -75,7 +75,7 @@ export async function getDashboardData() {
     db
       .select({ total: count() })
       .from(enquiries)
-      .where(and(gte(enquiries.createdAt, since14), sql`${enquiries.createdAt} < ${since7}`, notSpam)),
+      .where(and(gte(enquiries.createdAt, since14), lt(enquiries.createdAt, since7), notSpam)),
     db
       .select({ total: count() })
       .from(enquiries)
