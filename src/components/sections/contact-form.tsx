@@ -3,16 +3,17 @@
 import { useActionState, useId, type ReactNode } from "react";
 
 import { submitContactForm } from "@/actions/contact";
+import { AttributionFields } from "@/admin/site/attribution";
 import { Button } from "@/components/ui/button";
 import { SmartLink } from "@/components/ui/smart-link";
 import { cn } from "@/lib/cn";
-import { phoneHref, whatsappHref } from "@/lib/contact-links";
 import { HONEYPOT_FIELD, initialContactState, type ContactField, type ContactFormState } from "@/lib/contact/types";
 
 const inputClasses =
   "block w-full rounded-[3px] border border-transparent bg-surface-input px-4 text-[15px] text-slate-900 transition-[border-color,box-shadow,background-color] duration-200 placeholder:text-slate-400 hover:bg-[#d9e4f3] focus:border-navy-800 focus:bg-white focus:ring-4 focus:ring-navy-800/10 focus:outline-none aria-invalid:border-red-500 aria-invalid:bg-red-50/60";
 
-export function ContactForm() {
+/** Homepage contact form. Submissions land in Admin → Enquiries (“Contact form”). */
+export function ContactForm({ phoneHref, whatsappHref }: { phoneHref: string; whatsappHref: string }) {
   const [state, formAction, pending] = useActionState<ContactFormState, FormData>(
     submitContactForm,
     initialContactState,
@@ -42,6 +43,8 @@ export function ContactForm() {
         multiline
         required
       />
+
+      <AttributionFields />
 
       {/* Honeypot: hidden from people and assistive tech, tempting for bots. */}
       <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
@@ -88,7 +91,7 @@ export function ContactForm() {
                 call
               </SmartLink>{" "}
               or{" "}
-              <SmartLink href={whatsappHref()} className="font-semibold underline underline-offset-2">
+              <SmartLink href={whatsappHref} className="font-semibold underline underline-offset-2">
                 WhatsApp
               </SmartLink>{" "}
               us and we’ll help right away.

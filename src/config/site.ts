@@ -6,6 +6,8 @@ export interface SocialLink {
   href: string;
 }
 
+const director = { honorific: "Er.", name: "Amit Kumar" } as const;
+
 function resolveSiteUrl() {
   const explicit = process.env.NEXT_PUBLIC_SITE_URL;
   if (explicit) return explicit.replace(/\/$/, "");
@@ -42,12 +44,19 @@ export const siteConfig = {
     display: "Chakia, East Champaran, Bihar, India - 845412",
   },
   director: {
-    name: "Mr. Amit Kumar",
+    ...director,
+    /** The name as shown on the site, honorific included. */
+    displayName: `${director.honorific} ${director.name}`,
     title: "Director, Ishita Traders",
   },
   brands: ["UTL Solar", "Exide Industries", "Microtek"],
-  /** Add profile URLs here; only entries with an href are rendered in the footer. */
-  socials: [] as SocialLink[],
+  /** Footer icons always show (as in the design); each becomes a link once its profile URL is filled in. */
+  socials: [
+    { platform: "facebook", label: "Ishita Traders on Facebook", href: "" },
+    { platform: "linkedin", label: "Ishita Traders on LinkedIn", href: "" },
+    { platform: "x", label: "Ishita Traders on X", href: "" },
+    { platform: "instagram", label: "Ishita Traders on Instagram", href: "" },
+  ] as SocialLink[],
   /** Optional YouTube/Vimeo embed URL for the "solar system video tour" button. */
   solarTourVideoUrl: process.env.NEXT_PUBLIC_SOLAR_TOUR_VIDEO_URL || undefined,
 } as const;

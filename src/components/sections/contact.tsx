@@ -1,15 +1,17 @@
+import { contactLinks } from "@/admin/content/links";
+import { getSiteSettings } from "@/admin/content/settings";
 import { SolarLineArt } from "@/components/icons";
 import { Reveal } from "@/components/motion/reveal";
 import { SmartLink } from "@/components/ui/smart-link";
 import { sectionIds } from "@/config/navigation";
-import { siteConfig } from "@/config/site";
 import { contactSection } from "@/content/home";
-import { mailtoHref, phoneHref } from "@/lib/contact-links";
 
 import { ContactForm } from "./contact-form";
 
-export function Contact() {
+export async function Contact() {
   const { title } = contactSection;
+  const { contact, business } = await getSiteSettings();
+  const links = contactLinks(contact);
 
   return (
     <section
@@ -37,18 +39,18 @@ export function Contact() {
               <p className="font-display text-[17.3px] leading-[24.75px] font-semibold tracking-[0.025em] text-neutral-300">
                 {contactSection.infoTitle}
               </p>
-              <p className="max-w-[330px] text-[17px] leading-[19.7px] text-[#b4becb]">{siteConfig.address.display}</p>
+              <p className="max-w-[330px] text-[17px] leading-[19.7px] text-[#b4becb]">{business.address.display}</p>
               <p className="flex flex-col pt-1 font-display text-[17.3px] leading-7 text-[#ded7d7]">
                 <span>
                   Phone no:{" "}
-                  <a href={phoneHref} className="transition-colors hover:text-white">
-                    {siteConfig.phone.display}
+                  <a href={links.phone} className="transition-colors hover:text-white">
+                    {contact.phoneDisplay}
                   </a>
                 </span>
                 <span>
                   Email ID:{" "}
-                  <a href={mailtoHref()} className="break-all transition-colors hover:text-white">
-                    {siteConfig.email}
+                  <a href={links.mailto()} className="break-all transition-colors hover:text-white">
+                    {contact.email}
                   </a>
                 </span>
               </p>
@@ -78,7 +80,7 @@ export function Contact() {
           delay={0.12}
           className="rounded-[16.5px] bg-[#f2f8fe] p-6 shadow-float sm:p-10 lg:self-start lg:p-[54px]"
         >
-          <ContactForm />
+          <ContactForm phoneHref={links.phone} whatsappHref={links.whatsapp()} />
         </Reveal>
       </div>
     </section>

@@ -4,16 +4,11 @@ import Image from "next/image";
 import { LazyMotion, animate, m, useInView, useMotionValue, useReducedMotion, type PanInfo } from "motion/react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
-import {
-  CheckCircleIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  MedicalIcon,
-  QuoteIcon,
-  StarIcon,
-  StorefrontIcon,
-} from "@/components/icons";
-import type { Testimonial, TestimonialBadge } from "@/content/home";
+import arrowArt from "@/assets/images/carousel/arrow.svg";
+import { CheckCircleIcon, MedicalIcon, QuoteIcon, StarIcon, StorefrontIcon } from "@/components/icons";
+import { resolveImage } from "@/admin/content/images";
+import type { PublicTestimonial as Testimonial } from "@/admin/content/public-types";
+import type { TestimonialBadge } from "@/admin/content/types";
 import { cn } from "@/lib/cn";
 
 const loadDragFeatures = () => import("@/components/motion/dom-max").then((mod) => mod.default);
@@ -21,9 +16,22 @@ const loadDragFeatures = () => import("@/components/motion/dom-max").then((mod) 
 const EASE = [0.16, 1, 0.3, 1] as const;
 const AUTOPLAY_MS = 5000;
 
+/** The pager shows at most four dots (Figma 323:2347); each covers an equal run of slides. */
+const MAX_DOTS = 4;
+
+const twoDigits = (value: number) => String(value).padStart(2, "0");
+
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+
 const badgeStyles: Record<
   TestimonialBadge,
-  { Icon: typeof CheckCircleIcon; className: string; iconClassName: string }
+  { Icon?: typeof CheckCircleIcon; className: string; iconClassName?: string }
 > = {
   installation: {
     Icon: CheckCircleIcon,
@@ -40,6 +48,7 @@ const badgeStyles: Record<
     className: "bg-[rgb(116_143_15/0.45)] text-[#002115]",
     iconClassName: "h-[13.4px] w-[16px]",
   },
+  sample: { className: "bg-slate-200 text-slate-600" },
 };
 
 interface Metrics {
@@ -69,10 +78,14 @@ export function TestimonialCarousel({ items }: { items: Testimonial[] }) {
     const measure = () => {
       const cards = viewport.querySelectorAll<HTMLElement>("[data-slide]");
       if (cards.length < 2) return;
+      // Sub-pixel rects, not offsetLeft/offsetWidth: those round to whole pixels, and the rounding
+      // error multiplies by the slide index (75 slides with 25 testimonials ≈ 10px off-centre).
+      const first = cards[0].getBoundingClientRect();
+      const second = cards[1].getBoundingClientRect();
       setMetrics({
-        viewport: viewport.clientWidth,
-        card: cards[0].offsetWidth,
-        step: cards[1].offsetLeft - cards[0].offsetLeft,
+        viewport: viewport.getBoundingClientRect().width,
+        card: first.width,
+        step: second.left - first.left,
       });
       jumpNext.current = true;
     };
@@ -139,7 +152,10 @@ export function TestimonialCarousel({ items }: { items: Testimonial[] }) {
     settle(next);
   };
 
-  const activeDot = ((index % count) + count) % count;
+  const activeSlide = ((index % count) + count) % count;
+  const dotCount = Math.min(MAX_DOTS, count);
+  const slidesPerDot = Math.ceil(count / dotCount);
+  const activeDot = Math.floor(activeSlide / slidesPerDot);
 
   return (
     <LazyMotion features={loadDragFeatures}>
@@ -152,83 +168,130 @@ export function TestimonialCarousel({ items }: { items: Testimonial[] }) {
         onFocusCapture={() => setHovered(true)}
         onBlurCapture={() => setHovered(false)}
       >
-        <div ref={viewportRef} className="overflow-hidden py-6">
-          <m.ul
-            className={cn(
-              "flex w-max touch-pan-y items-stretch gap-[clamp(1.25rem,3.5vw,3.2rem)] transition-opacity duration-300",
-              metrics ? "opacity-100" : "opacity-0",
-            )}
-            style={{ x }}
-            drag="x"
-            dragMomentum={false}
-            dragElastic={0.12}
-            onDragStart={() => setDragging(true)}
-            onDragEnd={onDragEnd}
-          >
-            {slides.map((item, slideIndex) => {
-              const isClone = slideIndex < count || slideIndex >= count * 2;
-              return (
-                <li
-                  key={`${item.name}-${slideIndex}`}
-                  data-slide
-                  aria-hidden={isClone || undefined}
-                  inert={isClone || undefined}
-                  role="group"
-                  aria-roledescription="slide"
-                  aria-label={isClone ? undefined : `${(slideIndex % count) + 1} of ${count}`}
-                  className="flex w-[min(84vw,390px)] shrink-0"
-                >
-                  <TestimonialCard item={item} active={slideIndex === index} />
-                </li>
-              );
-            })}
-          </m.ul>
+        <div className="relative">
+          <div ref={viewportRef} className="overflow-hidden py-6">
+            <m.ul
+              className={cn(
+                "flex w-max touch-pan-y items-stretch gap-[clamp(1.25rem,3.5vw,3.2rem)] transition-opacity duration-300",
+                metrics ? "opacity-100" : "opacity-0",
+              )}
+              style={{ x }}
+              drag="x"
+              dragMomentum={false}
+              dragElastic={0.12}
+              onDragStart={() => setDragging(true)}
+              onDragEnd={onDragEnd}
+            >
+              {slides.map((item, slideIndex) => {
+                const isClone = slideIndex < count || slideIndex >= count * 2;
+                return (
+                  <li
+                    key={`${item.id}-${slideIndex}`}
+                    data-slide
+                    aria-hidden={isClone || undefined}
+                    inert={isClone || undefined}
+                    role="group"
+                    aria-roledescription="slide"
+                    aria-label={isClone ? undefined : `${(slideIndex % count) + 1} of ${count}`}
+                    className="flex w-[min(84vw,390px)] shrink-0"
+                  >
+                    <TestimonialCard item={item} active={slideIndex === index} />
+                  </li>
+                );
+              })}
+            </m.ul>
+          </div>
+
+          {/* Figma 323:2356 / 323:2355: 67px arrows over the carousel's edges, from tablet width up. */}
+          <CarouselArrow
+            direction="previous"
+            onClick={() => settle(index - 1)}
+            className="absolute top-[calc(50%-10.5px)] left-[clamp(1rem,3.2vw,3.125rem)] hidden -translate-y-1/2 md:block"
+          />
+          <CarouselArrow
+            direction="next"
+            onClick={() => settle(index + 1)}
+            className="absolute top-[calc(50%-10.5px)] right-[clamp(1rem,3.2vw,3.125rem)] hidden -translate-y-1/2 md:block"
+          />
         </div>
 
-        <div className="mt-4 flex items-center justify-center gap-4">
-          <button
-            type="button"
-            onClick={() => settle(index - 1)}
-            aria-label="Previous testimonial"
-            className="flex size-11 items-center justify-center rounded-full border border-slate-200 bg-white text-navy-900 shadow-soft transition-colors hover:border-navy-800 hover:bg-navy-800 hover:text-white"
-          >
-            <ChevronLeftIcon className="h-3 w-2" />
-          </button>
-          <div className="flex items-center gap-2">
-            {items.map((item, dot) => (
-              <button
-                key={item.name}
-                type="button"
-                onClick={() => settle(count + dot)}
-                aria-label={`Show testimonial ${dot + 1} of ${count}`}
-                aria-current={dot === activeDot ? "true" : undefined}
-                className="flex h-6 items-center"
-              >
-                <span
-                  className={cn(
-                    "block h-2 rounded-full transition-all duration-500 ease-out-expo",
-                    dot === activeDot ? "w-7 bg-navy-800" : "w-2 bg-navy-800/25 hover:bg-navy-800/50",
-                  )}
-                />
-              </button>
-            ))}
+        <div className="mt-4 flex items-center justify-center gap-5">
+          <CarouselArrow direction="previous" onClick={() => settle(index - 1)} className="size-11 md:hidden" />
+          {/* Figma 323:2349: progress dots, then "current / total". */}
+          <div className="flex items-center gap-5">
+            <div className="flex items-center gap-[14px]">
+              {Array.from({ length: dotCount }, (_, dot) => {
+                const first = dot * slidesPerDot;
+                const last = Math.min(count, first + slidesPerDot);
+                return (
+                  <button
+                    key={dot}
+                    type="button"
+                    onClick={() => settle(count + first)}
+                    aria-label={
+                      slidesPerDot === 1
+                        ? `Show testimonial ${first + 1} of ${count}`
+                        : `Show testimonials ${first + 1}–${last} of ${count}`
+                    }
+                    aria-current={dot === activeDot ? "true" : undefined}
+                    className={cn(
+                      "relative size-[17px] rounded-full transition-colors duration-300 after:absolute after:-inset-[7px]",
+                      dot === activeDot ? "bg-navy-900" : "bg-[#dee6f5] hover:bg-[#c5d2ec]",
+                    )}
+                  />
+                );
+              })}
+            </div>
+            <p
+              aria-hidden="true"
+              className="text-[18.385px] leading-[26.265px] font-semibold tracking-[0.01em] whitespace-nowrap text-[#51617b] tabular-nums"
+            >
+              {twoDigits(activeSlide + 1)} / {twoDigits(count)}
+            </p>
           </div>
-          <button
-            type="button"
-            onClick={() => settle(index + 1)}
-            aria-label="Next testimonial"
-            className="flex size-11 items-center justify-center rounded-full border border-slate-200 bg-white text-navy-900 shadow-soft transition-colors hover:border-navy-800 hover:bg-navy-800 hover:text-white"
-          >
-            <ChevronRightIcon className="h-3 w-2" />
-          </button>
+          <CarouselArrow direction="next" onClick={() => settle(index + 1)} className="size-11 md:hidden" />
         </div>
       </div>
     </LazyMotion>
   );
 }
 
+function CarouselArrow({
+  direction,
+  onClick,
+  className,
+}: {
+  direction: "previous" | "next";
+  onClick: () => void;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={direction === "next" ? "Next testimonial" : "Previous testimonial"}
+      className={cn(
+        "relative z-10 size-[67px] shrink-0 rounded-full transition-[scale] duration-200 ease-out hover:scale-105 active:scale-95",
+        className,
+      )}
+    >
+      {/* The design's own art (white disc, navy chevron, soft drop shadow); "previous" is the same art mirrored. */}
+      <span
+        aria-hidden="true"
+        className={cn(
+          "pointer-events-none absolute inset-[-23.88%_-29.85%_-35.82%_-29.85%]",
+          direction === "previous" && "-scale-x-100",
+        )}
+      >
+        <Image src={arrowArt} alt="" className="block size-full max-w-none" />
+      </span>
+    </button>
+  );
+}
+
 function TestimonialCard({ item, active }: { item: Testimonial; active: boolean }) {
-  const badge = badgeStyles[item.badge.kind];
+  const badge = badgeStyles[item.badge.kind] ?? badgeStyles.sample;
+  const avatar = resolveImage(item.avatar, item.name);
 
   return (
     <figure
@@ -247,7 +310,7 @@ function TestimonialCard({ item, active }: { item: Testimonial; active: boolean 
               badge.className,
             )}
           >
-            <badge.Icon className={badge.iconClassName} />
+            {badge.Icon ? <badge.Icon className={badge.iconClassName} /> : null}
             {item.badge.label}
           </span>
           <QuoteIcon className="size-[47px] text-surface-tint" />
@@ -274,15 +337,24 @@ function TestimonialCard({ item, active }: { item: Testimonial; active: boolean 
           active ? "bg-surface-tint" : "bg-[#f0f3ff]",
         )}
       >
-        <Image
-          src={item.avatar.src}
-          alt=""
-          width={44}
-          height={44}
-          // Tiny and shared by every loop copy — load up front so slides never pop in mid-transition.
-          loading="eager"
-          className="size-11 shrink-0 rounded-xl object-cover shadow-soft"
-        />
+        {avatar ? (
+          <Image
+            src={avatar.src}
+            alt=""
+            width={44}
+            height={44}
+            // Tiny and shared by every loop copy — load up front so slides never pop in mid-transition.
+            loading="eager"
+            className="size-11 shrink-0 rounded-xl object-cover shadow-soft"
+          />
+        ) : (
+          <span
+            aria-hidden="true"
+            className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white font-display text-sm font-bold text-navy-900 shadow-soft"
+          >
+            {initials(item.name)}
+          </span>
+        )}
         <span className="flex min-w-0 flex-col">
           <span className="truncate font-display text-lg leading-6 font-bold text-navy-900">{item.name}</span>
           <span className="text-xs leading-[18px] text-body">{item.location}</span>

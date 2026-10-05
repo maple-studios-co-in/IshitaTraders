@@ -2,29 +2,37 @@ import Image from "next/image";
 import { Fragment } from "react";
 
 import whatsappLogo from "@/assets/images/icons/whatsapp.png";
+import { resolveImage } from "@/admin/content/images";
+import { contactLinks } from "@/admin/content/links";
+import { getSiteSettings } from "@/admin/content/settings";
+import type { SiteSettings } from "@/admin/content/settings-schema";
 import { HeadsetIcon, MailIcon, PhoneOutlineIcon } from "@/components/icons";
 import { ButtonLink } from "@/components/ui/button";
 import { sectionIds } from "@/config/navigation";
-import { siteConfig } from "@/config/site";
-import { hero } from "@/content/home";
-import { mailtoHref, phoneHref, whatsappHref } from "@/lib/contact-links";
 
 const riseDelay = (step: number) => ({ animationDelay: `${120 + step * 110}ms` });
 
-export function Hero() {
+/** Hero banner — every text and the image are editable in Admin → Site content → Hero. */
+export async function Hero() {
+  const { hero, contact } = await getSiteSettings();
+  const image = resolveImage(hero.image, "Solar installation in Bihar");
+
   return (
     <section id={sectionIds.home} aria-labelledby="hero-title" className="relative isolate flex flex-col bg-navy-950">
       <div className="relative flex min-h-[560px] items-center overflow-hidden py-20 lg:h-[min(755px,calc(100svh-var(--header-h)-60px))] lg:min-h-[600px] lg:py-0">
-        <Image
-          src={hero.image.src}
-          alt={hero.image.alt}
-          fill
-          preload
-          quality={85}
-          sizes="100vw"
-          placeholder="blur"
-          className="-z-20 animate-hero-zoom object-cover"
-        />
+        {image ? (
+          <Image
+            src={image.src}
+            alt={image.alt}
+            fill
+            preload
+            quality={85}
+            sizes="100vw"
+            placeholder={image.placeholder}
+            blurDataURL={image.blurDataURL}
+            className="-z-20 animate-hero-zoom object-cover"
+          />
+        ) : null}
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-slate-900/50" />
 
         <div className="container-site">
@@ -34,10 +42,14 @@ export function Hero() {
               style={riseDelay(0)}
             >
               <span className="font-display">{hero.eyebrow}</span>
-              <span aria-hidden="true" className="mx-2">
-                •
-              </span>
-              <span className="font-display">{hero.established}</span>
+              {hero.established ? (
+                <>
+                  <span aria-hidden="true" className="mx-2">
+                    •
+                  </span>
+                  <span className="font-display">{hero.established}</span>
+                </>
+              ) : null}
             </p>
 
             <h1
@@ -45,8 +57,8 @@ export function Hero() {
               className="animate-rise font-display text-[clamp(2.5rem,1.55rem+2.6vw,3.25rem)] leading-[1.22] font-extrabold tracking-[-0.025em] text-white"
               style={riseDelay(1)}
             >
-              {hero.titleLines.map((line) => (
-                <span key={line} className="block">
+              {hero.titleLines.map((line, index) => (
+                <span key={`${line}-${index}`} className="block">
                   {line}
                 </span>
               ))}
@@ -59,55 +71,58 @@ export function Hero() {
               {hero.description}
             </p>
 
-            <div
-              className="flex w-full animate-rise flex-wrap items-center gap-x-3.5 gap-y-1 border-t border-white/15 pt-2 font-display text-lg tracking-[0.025em] sm:text-[22px] lg:text-[26.7px] lg:leading-[38px]"
-              style={riseDelay(3)}
-            >
-              <p className="font-semibold text-leaf-600">{hero.trustedBrandsLabel}</p>
-              <ul className="flex flex-wrap items-center gap-x-3.5" aria-label="Trusted brands">
-                {hero.trustedBrands.map((brand, index) => (
-                  <Fragment key={brand}>
-                    {index > 0 ? (
-                      <li aria-hidden="true" className="font-semibold text-slate-500">
-                        •
-                      </li>
-                    ) : null}
-                    <li className="font-bold text-white">{brand}</li>
-                  </Fragment>
-                ))}
-              </ul>
-            </div>
+            {hero.trustedBrands.length > 0 ? (
+              <div
+                className="flex w-full animate-rise flex-wrap items-center gap-x-3.5 gap-y-1 border-t border-white/15 pt-2 font-display text-lg tracking-[0.025em] sm:text-[22px] lg:text-[26.7px] lg:leading-[38px]"
+                style={riseDelay(3)}
+              >
+                <p className="font-semibold text-leaf-600">{hero.trustedBrandsLabel}</p>
+                <ul className="flex flex-wrap items-center gap-x-3.5" aria-label="Trusted brands">
+                  {hero.trustedBrands.map((brand, index) => (
+                    <Fragment key={`${brand}-${index}`}>
+                      {index > 0 ? (
+                        <li aria-hidden="true" className="font-semibold text-slate-500">
+                          •
+                        </li>
+                      ) : null}
+                      <li className="font-bold text-white">{brand}</li>
+                    </Fragment>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
 
-      <QuickContactStrip />
+      <QuickContactStrip hero={hero} contact={contact} />
     </section>
   );
 }
 
-function QuickContactStrip() {
+function QuickContactStrip({ hero, contact }: { hero: SiteSettings["hero"]; contact: SiteSettings["contact"] }) {
+  const links = contactLinks(contact);
   return (
     <div className="border-b border-slate-200 bg-slate-50 py-3.5">
       <div className="container-site flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-display">
           <HeadsetIcon className="h-[15px] w-[16.7px] shrink-0 text-navy-800" />
-          <span className="text-sm leading-5 font-semibold text-slate-700">{hero.helpLine.question}</span>
-          <span className="text-xs leading-4 font-medium text-slate-500">{hero.helpLine.label}</span>
-          <a href={phoneHref} className="pl-1 text-sm leading-5 font-bold text-navy-950 hover:text-brand-600">
-            {siteConfig.phone.display}
+          <span className="text-sm leading-5 font-semibold text-slate-700">{hero.helpQuestion}</span>
+          <span className="text-xs leading-4 font-medium text-slate-500">{hero.helpLabel}</span>
+          <a href={links.phone} className="pl-1 text-sm leading-5 font-bold text-navy-950 hover:text-brand-600">
+            {contact.phoneDisplay}
           </a>
         </p>
         <div className="flex flex-wrap items-center gap-3">
-          <ButtonLink href={phoneHref} variant="accent" size="sm" className="font-bold">
+          <ButtonLink href={links.phone} variant="accent" size="sm" className="font-bold">
             <PhoneOutlineIcon className="size-3" />
             Call Now
           </ButtonLink>
-          <ButtonLink href={whatsappHref()} variant="outline" size="sm" className="font-bold">
+          <ButtonLink href={links.whatsapp()} variant="outline" size="sm" className="font-bold">
             <Image src={whatsappLogo} alt="" width={18} height={18} className="size-[18px]" />
             WhatsApp Us
           </ButtonLink>
-          <ButtonLink href={mailtoHref()} variant="light" size="sm">
+          <ButtonLink href={links.mailto()} variant="light" size="sm">
             <MailIcon className="h-[10.7px] w-[13.3px]" />
             Email Us
           </ButtonLink>

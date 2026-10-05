@@ -1,13 +1,15 @@
 import Image from "next/image";
 
 import logo from "@/assets/images/brand/logo.png";
+import { contactLinks } from "@/admin/content/links";
+import { getSiteSettings } from "@/admin/content/settings";
 import { ButtonLink } from "@/components/ui/button";
-import { whatsappHref } from "@/lib/contact-links";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const { contact, business } = await getSiteSettings();
   return (
     <main className="flex min-h-svh flex-col items-center justify-center gap-6 bg-section-fade px-6 text-center">
-      <Image src={logo} alt="Ishita Traders" sizes="120px" className="h-24 w-auto" />
+      <Image src={logo} alt={business.name} sizes="120px" className="h-24 w-auto" />
       <p className="text-sm font-bold tracking-[0.1em] text-leaf-600 uppercase">404 — Page not found</p>
       <h1 className="max-w-xl font-display text-4xl font-extrabold tracking-tight text-navy-900 sm:text-5xl">
         This page has switched off.
@@ -17,7 +19,10 @@ export default function NotFound() {
         <ButtonLink href="/" size="lg">
           Back to home
         </ButtonLink>
-        <ButtonLink href={whatsappHref()} variant="outline" size="lg">
+        <ButtonLink href="/products" variant="light" size="lg">
+          Browse products
+        </ButtonLink>
+        <ButtonLink href={contactLinks(contact).whatsapp()} variant="outline" size="lg">
           WhatsApp us
         </ButtonLink>
       </div>

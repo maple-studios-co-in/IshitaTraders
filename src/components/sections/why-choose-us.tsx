@@ -1,12 +1,16 @@
 import Image from "next/image";
 
+import { contactLinks, resolveLink } from "@/admin/content/links";
+import { getSiteSettings } from "@/admin/content/settings";
+
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
 import { Eyebrow, SectionTitle } from "@/components/ui/section-heading";
 import { SmartLink } from "@/components/ui/smart-link";
 import { sectionIds } from "@/config/navigation";
 import { whyUsSection } from "@/content/home";
 
-export function WhyChooseUs() {
+export async function WhyChooseUs() {
+  const links = contactLinks((await getSiteSettings()).contact);
   return (
     <section
       id={sectionIds.whyUs}
@@ -58,7 +62,7 @@ export function WhyChooseUs() {
                   <p className="max-w-[420px] text-[13.95px] leading-[20.9px] text-body">{reason.description}</p>
                 </div>
                 <SmartLink
-                  href={reason.pill.href}
+                  href={resolveLink(reason.pill.href, links)}
                   className="flex w-full max-w-[274.6px] items-center justify-center rounded-[17.6px] border-[1.5px] border-blue-300 px-6 py-4 text-center text-[12.8px] leading-4 font-semibold tracking-[0.04em] text-navy-900 transition-colors duration-300 hover:border-navy-800 hover:bg-navy-800 hover:text-white"
                 >
                   {reason.pill.label}
