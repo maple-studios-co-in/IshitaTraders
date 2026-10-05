@@ -76,7 +76,13 @@ async function connectPostgres(url: string): Promise<Database> {
     connect_timeout: 15,
     onnotice: () => {},
   });
-  return drizzle(client, { schema });
+  const db = drizzle(client, { schema });
+  // Drizzle hands date/time values to postgres.js as-is (it converts column values itself), so a
+  // JS Date used directly in a raw `sql` fragment would crash the query on PostgreSQL while working
+  // on the embedded database. Convert any Date that reaches the wire, whatever the code path.
+  const serializeDate = (value: unknown) => (value instanceof Date ? value.toISOString() : value);
+  for (const type of [1082, 1114, 1184]) client.options.serializers[type] = serializeDate;
+  return db;
 }
 
 async function connectEmbedded(): Promise<Database> {
