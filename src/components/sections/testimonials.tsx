@@ -1,3 +1,4 @@
+import { getTestimonials } from "@/admin/content/content";
 import { Reveal } from "@/components/motion/reveal";
 import { Eyebrow } from "@/components/ui/section-heading";
 import { sectionIds } from "@/config/navigation";
@@ -5,7 +6,9 @@ import { testimonialsSection } from "@/content/home";
 
 import { TestimonialCarousel } from "./testimonial-carousel";
 
-export function Testimonials() {
+export async function Testimonials() {
+  const items = await getTestimonials();
+  if (items.length === 0) return null;
   return (
     <section
       id={sectionIds.testimonials}
@@ -26,7 +29,7 @@ export function Testimonials() {
       </div>
 
       <Reveal delay={0.1} className="mt-8 lg:mt-[50px]">
-        <TestimonialCarousel items={testimonialsSection.items} />
+        <TestimonialCarousel items={items} />
       </Reveal>
     </section>
   );

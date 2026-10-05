@@ -1,0 +1,30 @@
+/* Admin-only styles (loaded by app/admin/layout.tsx). Utilities come from the site's Tailwind build. */
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes admin-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+dialog[open] {
+  animation: admin-fade-in 160ms ease-out;
+}
+
+/* Keep long data (emails, URLs) from blowing out table cells. */
+.admin-break {
+  overflow-wrap: anywhere;
+}

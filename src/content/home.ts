@@ -1,22 +1,12 @@
 import type { StaticImageData } from "next/image";
 
-import heroImage from "@/assets/images/hero/solar-farm.webp";
 import brandExide from "@/assets/images/brands/exide.webp";
 import brandUtl from "@/assets/images/brands/utl.webp";
 import brandMicrotek from "@/assets/images/brands/microtek.webp";
-import categorySolarPanels from "@/assets/images/categories/solar-panels.webp";
-import categorySolarInverters from "@/assets/images/categories/solar-inverters.webp";
-import categoryInverters from "@/assets/images/categories/inverters.webp";
-import categoryBatteries from "@/assets/images/categories/batteries.webp";
-import categoryOnlineUps from "@/assets/images/categories/online-ups.webp";
-import categoryElectrical from "@/assets/images/categories/electrical.webp";
 import aboutCollage1 from "@/assets/images/about/collage-1.webp";
 import aboutCollage2 from "@/assets/images/about/collage-2.webp";
 import aboutCollage3 from "@/assets/images/about/collage-3.webp";
 import aboutCollage4 from "@/assets/images/about/collage-4.webp";
-import featuredUtl from "@/assets/images/products/featured-utl.webp";
-import featuredExide from "@/assets/images/products/featured-exide.webp";
-import featuredMicrotek from "@/assets/images/products/featured-microtek.webp";
 import institutionalInstallation from "@/assets/images/solutions/institutional-installation.webp";
 import rooftopSunrise from "@/assets/images/solutions/rooftop-sunrise.webp";
 import whyBackground from "@/assets/images/why/solar-field.webp";
@@ -27,37 +17,21 @@ import showcasePanels from "@/assets/images/showcase/solar-panels.webp";
 import showcaseInverter from "@/assets/images/showcase/solar-inverter.webp";
 import showcaseBattery from "@/assets/images/showcase/tubular-battery.webp";
 import directorPortrait from "@/assets/images/team/amit-kumar.webp";
-import avatarMamta from "@/assets/images/testimonials/mamta-verma.webp";
-import avatarAjay from "@/assets/images/testimonials/ajay-kumar-singh.webp";
-import avatarAlok from "@/assets/images/testimonials/alok-kumar-verma.webp";
 
+import type { LinkTarget } from "@/admin/content/links";
 import { anchor, productLinks, sectionIds } from "@/config/navigation";
-import { enquiryHref, whatsappHref } from "@/lib/contact-links";
+
+/**
+ * Static copy for the homepage sections. Business facts, contact channels, the hero, product
+ * categories, featured products, testimonials and FAQs are managed in the admin instead
+ * (see src/admin/content). Links to WhatsApp/enquiries are intents resolved from the current
+ * contact settings at render time.
+ */
 
 export interface ImageAsset {
   src: StaticImageData;
   alt: string;
 }
-
-/* ------------------------------------------------------------------ Hero */
-
-export const hero = {
-  eyebrow: "Ishita Traders",
-  established: "Estd. 2014",
-  titleLines: ["Reliable Power.", "Smarter Solar."],
-  description:
-    "Solar • Inverters • Batteries • Electrical Solutions. Trusted products and power solutions for homes, businesses and institutions.",
-  trustedBrandsLabel: "Trusted Brands:",
-  trustedBrands: ["UTL", "EXIDE", "MICROTEK"],
-  image: {
-    src: heroImage,
-    alt: "Rows of solar panels installed across a village landscape in Bihar",
-  } satisfies ImageAsset,
-  helpLine: {
-    question: "Need help choosing the right product?",
-    label: "Call our Chakia technical desk:",
-  },
-};
 
 /* ---------------------------------------------------------------- Brands */
 
@@ -83,7 +57,7 @@ export const brandsSection = {
         { icon: "home", label: "UPS" },
         { icon: "sun", label: "Solar" },
       ],
-      cta: { label: "View Exide Products", href: productLinks.all },
+      cta: { label: "View Exide Products", href: productLinks.brand("exide") },
     },
     {
       name: "UTL Solar",
@@ -93,7 +67,7 @@ export const brandsSection = {
         { icon: "home", label: "Home Inverters" },
         { icon: "cog", label: "Solar Solutions" },
       ],
-      cta: { label: "View UTL Products", href: productLinks.all },
+      cta: { label: "View UTL Products", href: productLinks.brand("utl") },
     },
     {
       name: "Microtek",
@@ -103,77 +77,20 @@ export const brandsSection = {
         { icon: "home", label: "UPS" },
         { icon: "sun", label: "Solar" },
       ],
-      cta: { label: "View Microtek Products", href: productLinks.all },
+      cta: { label: "View Microtek Products", href: productLinks.brand("microtek") },
     },
   ] satisfies BrandPartner[],
 };
 
 /* --------------------------------------------------------- What we provide */
 
-export interface ProductCategory {
-  category: string;
-  title: string;
-  description: string;
-  image: ImageAsset;
-  href: string;
-}
-
+/** Section copy; the category cards come from Admin → Brands & categories. */
 export const inventorySection = {
   eyebrow: "Complete inventory",
   title: "What We Provide",
   lead: "Power solutions for homes, businesses, and institutions across North Bihar.",
-  viewAll: { label: "View All Products", href: productLinks.featured },
+  viewAll: { label: "View All Products", href: productLinks.all },
   ctaLabel: "Get Price & Availability",
-  categories: [
-    {
-      category: "Rooftop & Project",
-      title: "Solar Panels",
-      description:
-        "High-efficiency UTL solar modules for residential and commercial projects, designed for reliable long-term power generation.",
-      image: { src: categorySolarPanels, alt: "Two solar panels mounted on a sunny rooftop" },
-      href: enquiryHref("solar panels"),
-    },
-    {
-      category: "Smart Solar PCU",
-      title: "Solar Inverters",
-      description:
-        "UTL on-grid solar inverters with MPPT technology for efficient solar conversion and dependable grid-connected performance.",
-      image: { src: categorySolarInverters, alt: "UTL solar inverter mounted on a wall" },
-      href: enquiryHref("solar inverters"),
-    },
-    {
-      category: "Home & Office UPS",
-      title: "Inverters",
-      description:
-        "Exide PowerSafe batteries designed for reliable backup power in offices, businesses and critical power applications.",
-      image: { src: categoryInverters, alt: "Exide PowerSafe Plus batteries" },
-      href: enquiryHref("inverters and PowerSafe batteries"),
-    },
-    {
-      category: "Inverter Batteries",
-      title: "Batteries",
-      description:
-        "Exide tubular batteries built for home backup and inverter applications, delivering dependable performance and long backup life.",
-      image: { src: categoryBatteries, alt: "Exide Home tubular inverter battery" },
-      href: enquiryHref("inverter batteries"),
-    },
-    {
-      category: "Commercial & Critical",
-      title: "Online UPS",
-      description:
-        "Microtek UPS solutions designed for stable, uninterrupted power for homes, offices and sensitive electronic equipment.",
-      image: { src: categoryOnlineUps, alt: "Family at home next to a Microtek online UPS" },
-      href: enquiryHref("online UPS systems"),
-    },
-    {
-      category: "Appliances & Wiring",
-      title: "Electrical Products",
-      description:
-        "Microtek electrical protection solutions including MCBs, protection devices and accessories for safer power systems.",
-      image: { src: categoryElectrical, alt: "Microtek MCBs, wiring and electrical accessories" },
-      href: enquiryHref("electrical products"),
-    },
-  ] satisfies ProductCategory[],
 };
 
 /* ----------------------------------------------------------------- About */
@@ -205,42 +122,12 @@ export const aboutSection = {
 
 /* ------------------------------------------------------ Featured products */
 
-export interface FeaturedProduct {
-  brand: string;
-  name: string;
-  description: string;
-  image: ImageAsset;
-  cta: { label: string; href: string };
-}
-
+/** Section copy; the products are the ones marked "Featured" in Admin → Products. */
 export const featuredSection = {
   eyebrow: "Products",
   title: "Featured Products",
   lead: "Genuine factory-fresh stock with original manufacturer warranty.",
   viewAll: { label: "View All Products", href: productLinks.all },
-  products: [
-    {
-      brand: "UTL",
-      name: "Lithium-Ion Battery",
-      description: "High-efficiency LiFePO4 battery, long-lasting power.",
-      image: { src: featuredUtl, alt: "UTL lithium-ion battery with display" },
-      cta: { label: "View UTL Products", href: productLinks.all },
-    },
-    {
-      brand: "Exide",
-      name: "Tubular Inverter Batteries",
-      description: "Exide HUPS can be customized to suit your needs and budget, choose the right HUPS for you.",
-      image: { src: featuredExide, alt: "Exide Home tubular inverter battery" },
-      cta: { label: "View Exide Products", href: productLinks.all },
-    },
-    {
-      brand: "Microtek",
-      name: "Lithium Iron Phosphate",
-      description: "Power that never fades — lithium ion.",
-      image: { src: featuredMicrotek, alt: "Microtek lithium-ion LFP battery" },
-      cta: { label: "View Microtek Products", href: productLinks.all },
-    },
-  ] satisfies FeaturedProduct[],
 };
 
 /* --------------------------------------------------------------- Contact */
@@ -299,9 +186,11 @@ export const solarHomeBanner = {
     "Talk to Ishita Traders about rooftop solar requirements for your residence. We are an authorised vendor facilitating installation and net-metering liaison under the central PM Surya Ghar Muft Bijli Yojana.",
   cta: {
     label: "Talk to a Solar Expert",
-    href: whatsappHref(
-      "Hi Ishita Traders, I would like to talk to a solar expert about rooftop solar for my home under PM Surya Ghar Muft Bijli Yojana.",
-    ),
+    href: {
+      kind: "whatsapp",
+      message:
+        "Hi Ishita Traders, I would like to talk to a solar expert about rooftop solar for my home under PM Surya Ghar Muft Bijli Yojana.",
+    } as LinkTarget,
   },
 };
 
@@ -318,14 +207,14 @@ export const whyUsSection = {
       title: "Trusted Brands",
       description:
         "Authorized direct distribution partnerships with UTL, Exide, and Microtek. 100% factory-sealed stock with verifiable manufacturer warranties.",
-      pill: { label: "UTL • Exide • Microtek", href: anchor(sectionIds.brands) },
+      pill: { label: "UTL • Exide • Microtek", href: anchor(sectionIds.brands) as LinkTarget },
     },
     {
       number: "02",
       title: "Since 2014",
       description:
         "A decade of continuous service across Bihar, ensuring accessible local support wherever you need it most.",
-      pill: { label: "Serving All of Bihar", href: anchor(sectionIds.contact) },
+      pill: { label: "Serving All of Bihar", href: anchor(sectionIds.contact) as LinkTarget },
     },
     {
       number: "03",
@@ -334,7 +223,10 @@ export const whyUsSection = {
         "Wholesale pricing, commercial battery banks, and turnkey solar solutions are directly supplied to hospitals, colleges, businesses, factories, petrol pumps, clinics, retail shops, schools, and MSME units such as flour mills, oil mills, and other small- and medium-scale industrial businesses.",
       pill: {
         label: "B2B & Institutional Rates",
-        href: whatsappHref("Hi Ishita Traders, I would like B2B / institutional rates for a bulk requirement."),
+        href: {
+          kind: "whatsapp",
+          message: "Hi Ishita Traders, I would like B2B / institutional rates for a bulk requirement.",
+        } as LinkTarget,
       },
     },
   ],
@@ -403,8 +295,11 @@ export interface ShowcaseSlide {
   points: string[];
   headline: string[];
   image: ImageAsset;
-  cta: { label: string; href: string };
+  cta: { label: string; href: LinkTarget };
 }
+
+/** A slide whose CTA has been resolved to a URL (what the client component receives). */
+export type ResolvedShowcaseSlide = Omit<ShowcaseSlide, "cta"> & { cta: { label: string; href: string } };
 
 export const showcaseSlides: ShowcaseSlide[] = [
   {
@@ -416,7 +311,7 @@ export const showcaseSlides: ShowcaseSlide[] = [
     points: ["Clean & Renewable Energy", "High Efficiency", "Long-Lasting Performance"],
     headline: ["Turn sunlight", "into power"],
     image: { src: showcasePanels, alt: "Two monocrystalline solar panels catching sunlight" },
-    cta: { label: "Explore Solar Panels", href: enquiryHref("solar panels") },
+    cta: { label: "Explore Solar Panels", href: { kind: "enquiry", subject: "solar panels" } },
   },
   {
     category: "Power Backup",
@@ -427,7 +322,7 @@ export const showcaseSlides: ShowcaseSlide[] = [
     points: ["Stable & Efficient Power", "Smart Monitoring", "Durable & Low Maintenance"],
     headline: ["Converting", "energy into", "opportunities"],
     image: { src: showcaseInverter, alt: "UTL solar inverter with digital display" },
-    cta: { label: "Explore Inverters", href: enquiryHref("solar inverters") },
+    cta: { label: "Explore Inverters", href: { kind: "enquiry", subject: "solar inverters" } },
   },
   {
     category: "Energy Storage",
@@ -438,60 +333,22 @@ export const showcaseSlides: ShowcaseSlide[] = [
     points: ["Longer Backup", "Fast Charging", "Safe & Reliable"],
     headline: ["Store energy", "for a brighter", "tomorrow"],
     image: { src: showcaseBattery, alt: "Exide solar tubular battery" },
-    cta: { label: "Explore Batteries", href: enquiryHref("solar batteries") },
+    cta: { label: "Explore Batteries", href: { kind: "enquiry", subject: "solar batteries" } },
   },
 ];
 
 /* ---------------------------------------------------------- Testimonials */
 
-export type TestimonialBadge = "installation" | "commercial" | "healthcare";
-
-export interface Testimonial {
-  name: string;
-  location: string;
-  quote: string;
-  rating: number;
-  badge: { kind: TestimonialBadge; label: string };
-  avatar: ImageAsset;
-}
-
+/** Section copy; the reviews come from Admin → Testimonials. */
 export const testimonialsSection = {
   eyebrow: "Testimonials",
   title: "What Our Clients Say",
   lead: "Real feedback from homes, businesses and institutions we power across Bihar.",
-  items: [
-    {
-      name: "Mamta Verma",
-      location: "Chakia, East Champaran • Homeowner",
-      quote:
-        "Installed a 5kW UTL on-grid solar system with Ishita Traders last summer. Our monthly electricity bill dropped from ₹6,200 to barely ₹450 during peak heat. Their Chakia installation team did clean wiring and took care of all the net-metering paperwork seamlessly.",
-      rating: 5,
-      badge: { kind: "installation", label: "Verified Installation" },
-      avatar: { src: avatarMamta, alt: "Mamta Verma" },
-    },
-    {
-      name: "Ajay Kumar Singh",
-      location: "Raghunath Pur, East Champaran, Bihar • Petrol Pump",
-      quote:
-        "We operate our petrol dispensing units and cold drink refrigerators entirely on the solar inverter solution purchased from Ishita Traders. The diesel generator cost savings alone paid back half our solar investment in the first 8 months.",
-      rating: 5,
-      badge: { kind: "commercial", label: "Verified Commercial" },
-      avatar: { src: avatarAjay, alt: "Ajay Kumar Singh" },
-    },
-    {
-      name: "Dr. Alok Kumar Verma",
-      location: "Motihari, Bihar • Verma Diagnostic Clinic",
-      quote:
-        "Running sensitive ultrasound and haematology machines requires zero voltage dips. Ishita Traders recommended and set up a Microtek 10kVA Online UPS with heavy Exide tubular batteries. In 18 months, we haven't faced a single minute of machine downtime. Exemplary local after-sales service!",
-      rating: 5,
-      badge: { kind: "healthcare", label: "Verified Healthcare Buyer" },
-      avatar: { src: avatarAlok, alt: "Dr. Alok Kumar Verma" },
-    },
-  ] satisfies Testimonial[],
 };
 
 /* -------------------------------------------------------------- Director */
 
+/** The director's name and title come from Admin → Site content → Business. */
 export const directorSection = {
   eyebrow: "Director’s message",
   quote: "“Quality is not just what we promise — it is what we consistently deliver.”",
@@ -504,23 +361,17 @@ export const directorSection = {
     title: "Our journey is built on one principle:",
     points: ["Never compromise on quality.", "Never take our customers’ trust for granted."],
   },
-  signature: "— Director, Mr. Amit Kumar",
-  portrait: { src: directorPortrait, alt: "Mr. Amit Kumar, Director of Ishita Traders" } satisfies ImageAsset,
+  portrait: directorPortrait,
   location: "Chakia, East Champaran, Bihar",
 };
 
 /* ------------------------------------------------------------------- FAQ */
 
+/** Section copy; the questions come from Admin → FAQs. */
 export const faqSection = {
   eyebrow: "Have questions?",
   title: "FAQ",
   lead: "Get quick answers from our team and expert guidance for your solar needs.",
-  questions: [
-    "What is the estimated budget required for installing a solar project?",
-    "What is the warranty period for the solar panels?",
-    "Which areas do you provide services in, and which solar brands do you install?",
-    "Where is your office located, and do you charge for home visits?",
-  ],
 };
 
 /* ------------------------------------------------------------- Final CTA */
@@ -530,12 +381,5 @@ export const finalCta = {
   description:
     "Explore solar panels, inverters, batteries and complete energy solutions from trusted UTL, Microtek, Exide product ranges.",
   quote: { label: "Get a Quote", href: anchor(sectionIds.contact) },
-  whatsapp: { label: "WhatsApp Us", href: whatsappHref() },
-};
-
-export const footerContent = {
-  tagline: "Battery | Inverter | Solar",
-  description:
-    "Distributor and turnkey power solutions provider, serving primarily Champaran and across Bihar since 2014.",
-  copyright: "© Ishita Traders. All Rights Reserved. Estd. 2014, Chakia, East Champaran, Bihar.",
+  whatsapp: { label: "WhatsApp Us", href: { kind: "whatsapp" } as LinkTarget },
 };

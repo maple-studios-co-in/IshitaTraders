@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Jost, Outfit, Plus_Jakarta_Sans } from "next/font/google";
 
-import { MotionProvider } from "@/components/providers/motion-provider";
-import { SmoothScroll } from "@/components/providers/smooth-scroll";
+import { imageUrl } from "@/admin/content/images";
+import { getSiteSettings } from "@/admin/content/settings";
 import { siteConfig } from "@/config/site";
 
 import "./globals.css";
@@ -19,46 +19,39 @@ const outfit = Outfit({
 });
 const jost = Jost({ subsets: ["latin"], variable: "--font-jost-face", display: "swap", preload: false });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteConfig.url),
-  title: {
-    default: siteConfig.title,
-    template: `%s | ${siteConfig.name}`,
-  },
-  description: siteConfig.description,
-  applicationName: siteConfig.name,
-  keywords: [
-    "Ishita Traders",
-    "solar panels Chakia",
-    "solar installation East Champaran",
-    "UTL solar dealer Bihar",
-    "Exide inverter battery",
-    "Microtek UPS",
-    "PM Surya Ghar Muft Bijli Yojana vendor",
-    "inverter battery Motihari",
-  ],
-  authors: [{ name: siteConfig.name }],
-  creator: siteConfig.name,
-  alternates: { canonical: "/" },
-  openGraph: {
-    type: "website",
-    locale: "en_IN",
-    url: "/",
-    siteName: siteConfig.name,
-    title: siteConfig.title,
-    description: siteConfig.description,
-    images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "Ishita Traders — Reliable Power. Smarter Solar." }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: siteConfig.title,
-    description: siteConfig.description,
-    images: ["/og.jpg"],
-  },
-  robots: { index: true, follow: true },
-  formatDetection: { telephone: true, email: true, address: true },
-  category: "business",
-};
+/** Site-wide SEO defaults, editable in Admin → SEO. Pages add their own title and canonical URL. */
+export async function generateMetadata(): Promise<Metadata> {
+  const { seo, business } = await getSiteSettings();
+  const ogImage = seo.ogImage
+    ? { url: imageUrl(seo.ogImage) ?? "/og.jpg", alt: seo.ogImage.alt || seo.title }
+    : { url: "/og.jpg", width: 1200, height: 630, alt: "Ishita Traders — Reliable Power. Smarter Solar." };
+
+  return {
+    metadataBase: new URL(siteConfig.url),
+    title: { default: seo.title, template: seo.titleTemplate },
+    description: seo.description,
+    applicationName: business.name,
+    keywords: seo.keywords,
+    authors: [{ name: business.name }],
+    creator: business.name,
+    openGraph: {
+      type: "website",
+      locale: "en_IN",
+      siteName: business.name,
+      title: seo.title,
+      description: seo.description,
+      images: [ogImage],
+    },
+    twitter: { card: "summary_large_image", title: seo.title, description: seo.description, images: [ogImage.url] },
+    robots: seo.allowIndexing ? { index: true, follow: true } : { index: false, follow: false },
+    verification: {
+      google: seo.googleVerification || undefined,
+      other: seo.bingVerification ? { "msvalidate.01": seo.bingVerification } : undefined,
+    },
+    formatDetection: { telephone: true, email: true, address: true },
+    category: "business",
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#1e3a8a",
@@ -69,16 +62,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en-IN" className={`${inter.variable} ${jakarta.variable} ${outfit.variable} ${jost.variable}`}>
-      <body>
-        <a
-          href="#main-content"
-          className="fixed top-3 left-3 z-100 -translate-y-24 rounded-md bg-navy-800 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-transform focus:translate-y-0"
-        >
-          Skip to content
-        </a>
-        <MotionProvider>{children}</MotionProvider>
-        <SmoothScroll />
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

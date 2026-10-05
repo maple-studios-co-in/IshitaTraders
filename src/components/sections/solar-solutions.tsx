@@ -1,5 +1,8 @@
 import Image from "next/image";
 
+import { contactLinks, resolveLink } from "@/admin/content/links";
+import { getSiteSettings } from "@/admin/content/settings";
+
 import { ArrowRightIcon, PlugIcon, SunFilledIcon, TrendDownIcon, VerifiedBadgeIcon } from "@/components/icons";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
 import { ButtonArrow, ButtonLink } from "@/components/ui/button";
@@ -95,7 +98,8 @@ export function SolarSolutions() {
   );
 }
 
-export function SolarHomeBanner() {
+export async function SolarHomeBanner() {
+  const links = contactLinks((await getSiteSettings()).contact);
   return (
     <section aria-labelledby="solar-home-title" className="bg-brand-sweep py-12 lg:py-[71px]">
       <div className="container-site">
@@ -110,7 +114,7 @@ export function SolarHomeBanner() {
             <p className="text-sm leading-[22px] text-body">{solarHomeBanner.description}</p>
           </div>
           <ButtonLink
-            href={solarHomeBanner.cta.href}
+            href={resolveLink(solarHomeBanner.cta.href, links)}
             variant="accent"
             className="h-auto gap-1 rounded-[4px] px-6 py-3 text-sm leading-5 tracking-[0.01em]"
           >

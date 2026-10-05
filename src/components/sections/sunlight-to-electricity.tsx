@@ -1,5 +1,7 @@
 import Image from "next/image";
 
+import { getSiteSettings } from "@/admin/content/settings";
+
 import {
   ArrowRoundIcon,
   GearIcon,
@@ -10,7 +12,6 @@ import {
 } from "@/components/icons";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
 import { ButtonArrow, ButtonLink } from "@/components/ui/button";
-import { siteConfig } from "@/config/site";
 import { sunlightSection, type EnergyFeatureIcon } from "@/content/home";
 
 import { VideoTourButton } from "./video-tour-button";
@@ -22,7 +23,8 @@ const featureIcons: Record<EnergyFeatureIcon, typeof LeafIcon> = {
   sprout: SproutFolderIcon,
 };
 
-export function SunlightToElectricity() {
+export async function SunlightToElectricity() {
+  const { homepage } = await getSiteSettings();
   return (
     <section
       aria-labelledby="sunlight-title"
@@ -112,7 +114,7 @@ export function SunlightToElectricity() {
               className="object-cover"
             />
             <div className="absolute inset-0 flex items-center justify-center">
-              <VideoTourButton videoUrl={siteConfig.solarTourVideoUrl} label={sunlightSection.videoLabel} />
+              <VideoTourButton videoUrl={homepage.solarTourVideoUrl || undefined} label={sunlightSection.videoLabel} />
             </div>
           </div>
         </Reveal>

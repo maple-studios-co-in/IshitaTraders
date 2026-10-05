@@ -2,24 +2,33 @@
 
 import Image from "next/image";
 import { AnimatePresence, m } from "motion/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import logo from "@/assets/images/brand/logo.png";
 import whatsappLogo from "@/assets/images/icons/whatsapp.png";
 import { CloseIcon, MailOpenIcon, MenuIcon, PhoneIcon } from "@/components/icons";
 import { ButtonLink } from "@/components/ui/button";
-import { anchor, mainNav, sectionIds } from "@/config/navigation";
-import { siteConfig } from "@/config/site";
+import { contactLinks } from "@/admin/content/links";
+import type { SiteSettings } from "@/admin/content/settings-schema";
+import { anchor, mainNav, navHref, sectionIds } from "@/config/navigation";
 import { useActiveSection } from "@/hooks/use-active-section";
 import { cn } from "@/lib/cn";
-import { mailtoHref, phoneHref, whatsappHref } from "@/lib/contact-links";
 import { lockScroll } from "@/lib/smooth-scroll";
 
-const NAV_SECTION_IDS = mainNav.map((item) => item.sectionId);
+// Solar Solutions has no nav link, but its section still ends the Contact highlight, so no link
+// lights up while visitors read the solar sections that follow it.
+const TRACKED_SECTION_IDS = [...mainNav.map((item) => item.sectionId), sectionIds.solar];
 const MENU_ID = "mobile-navigation";
 
-export function SiteHeader() {
-  const activeSection = useActiveSection(NAV_SECTION_IDS);
+/** Site header. Contact buttons come from Admin → Site content → Contact; nav is page-aware. */
+export function SiteHeader({ contact, businessName }: { contact: SiteSettings["contact"]; businessName: string }) {
+  const pathname = usePathname();
+  const onHomepage = pathname === "/";
+  const links = useMemo(() => contactLinks(contact), [contact]);
+  const activeSection = useActiveSection(TRACKED_SECTION_IDS);
+  const isActive = (item: (typeof mainNav)[number]) =>
+    onHomepage ? item.sectionId === activeSection : Boolean(item.href && pathname.startsWith(item.href));
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -69,27 +78,28 @@ export function SiteHeader() {
     >
       <div className="container-site flex h-(--header-h) items-center justify-between gap-4 xl:gap-8">
         <a
-          href={anchor(sectionIds.home)}
+          href={onHomepage ? anchor(sectionIds.home) : "/"}
           className="shrink-0 rounded-md"
-          aria-label={`${siteConfig.name} — back to top`}
+          aria-label={`${businessName} — ${onHomepage ? "back to top" : "home"}`}
         >
           <Image src={logo} alt="" sizes="96px" loading="eager" className="h-12 w-auto xl:h-[70px]" />
         </a>
 
         <nav aria-label="Primary" className="hidden xl:block">
-          <ul className="flex items-center gap-4 2xl:gap-[21px]">
+          {/* Figma 250:7018 spaces the six links 1.8em apart. */}
+          <ul className="flex items-center gap-[28.7px] 2xl:gap-[33px]">
             {mainNav.map((item) => {
-              const isActive = item.sectionId === activeSection;
+              const active = isActive(item);
               return (
                 <li key={item.sectionId}>
                   <a
-                    href={anchor(item.sectionId)}
-                    aria-current={isActive ? "true" : undefined}
+                    href={navHref(item, onHomepage)}
+                    aria-current={active ? "true" : undefined}
                     className={cn(
                       "relative py-1.5 text-base font-semibold tracking-[0.01em] text-body transition-colors duration-200 hover:text-navy-800 2xl:text-[18.4px]",
                       "after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-full after:bg-leaf-600 after:transition-transform after:duration-300",
                       "hover:after:scale-x-100",
-                      isActive && "font-bold text-leaf-600 after:scale-x-100 hover:text-leaf-600",
+                      active && "font-bold text-leaf-600 after:scale-x-100 hover:text-leaf-600",
                     )}
                   >
                     {item.label}
@@ -102,7 +112,7 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-2.5 sm:gap-3">
           <ButtonLink
-            href={whatsappHref()}
+            href={links.whatsapp()}
             variant="outline"
             className="hidden h-[46px] gap-2 rounded-[6px] pr-4 pl-1.5 text-xs font-bold sm:inline-flex"
           >
@@ -110,18 +120,18 @@ export function SiteHeader() {
             WhatsApp Us
           </ButtonLink>
           <ButtonLink
-            href={phoneHref}
+            href={links.phone}
             variant="accent"
-            aria-label={`Call ${siteConfig.phone.display}`}
+            aria-label={`Call ${contact.phoneDisplay}`}
             className="h-[46px] gap-2.5 rounded-[6px] px-3 text-xs sm:px-3.5"
           >
             <PhoneIcon className="size-6" />
-            <span className="hidden sm:inline">{siteConfig.phone.display}</span>
+            <span className="hidden sm:inline">{contact.phoneDisplay}</span>
           </ButtonLink>
           <ButtonLink
-            href={mailtoHref()}
+            href={links.mailto()}
             variant="primary"
-            aria-label={`Email ${siteConfig.email}`}
+            aria-label={`Email ${contact.email}`}
             className="hidden size-[46px] rounded-[6px] bg-navy-700 px-0 sm:inline-flex"
           >
             <MailOpenIcon className="size-[27px]" />
@@ -156,12 +166,12 @@ export function SiteHeader() {
                 {mainNav.map((item) => (
                   <li key={item.sectionId} className="border-b border-slate-100">
                     <a
-                      href={anchor(item.sectionId)}
+                      href={navHref(item, onHomepage)}
                       onClick={() => closeMenu()}
-                      aria-current={item.sectionId === activeSection ? "true" : undefined}
+                      aria-current={isActive(item) ? "true" : undefined}
                       className={cn(
                         "flex items-center justify-between py-4 font-display text-xl font-semibold text-navy-950",
-                        item.sectionId === activeSection && "text-leaf-600",
+                        isActive(item) && "text-leaf-600",
                       )}
                     >
                       {item.label}
@@ -170,15 +180,15 @@ export function SiteHeader() {
                 ))}
               </ul>
               <div className="mt-auto grid gap-3 sm:grid-cols-3">
-                <ButtonLink href={phoneHref} variant="accent" size="lg" className="text-base">
+                <ButtonLink href={links.phone} variant="accent" size="lg" className="text-base">
                   <PhoneIcon className="size-5" />
-                  Call {siteConfig.phone.display}
+                  Call {contact.phoneDisplay}
                 </ButtonLink>
-                <ButtonLink href={whatsappHref()} variant="outline" size="lg" className="text-base">
+                <ButtonLink href={links.whatsapp()} variant="outline" size="lg" className="text-base">
                   <Image src={whatsappLogo} alt="" width={28} height={28} className="size-7" />
                   WhatsApp Us
                 </ButtonLink>
-                <ButtonLink href={mailtoHref()} variant="primary" size="lg" className="text-base">
+                <ButtonLink href={links.mailto()} variant="primary" size="lg" className="text-base">
                   <MailOpenIcon className="size-6" />
                   Email Us
                 </ButtonLink>

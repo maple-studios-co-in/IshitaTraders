@@ -2,18 +2,21 @@ import Image from "next/image";
 
 import { Reveal } from "@/components/motion/reveal";
 import { sectionIds } from "@/config/navigation";
-import { siteConfig } from "@/config/site";
+import { getSiteSettings } from "@/admin/content/settings";
 import { directorSection } from "@/content/home";
 
-export function DirectorMessage() {
+export async function DirectorMessage() {
+  const { business } = await getSiteSettings();
+  const { director } = business;
+  const displayName = [director.honorific, director.name].filter(Boolean).join(" ");
   return (
     <section id={sectionIds.director} aria-labelledby="director-title" className="bg-section-fade section-y">
       <div className="container-site grid items-start gap-12 lg:grid-cols-[minmax(0,472px)_minmax(0,1fr)] lg:gap-[clamp(3rem,5vw,4.5rem)]">
         <Reveal as="figure" className="flex flex-col">
           <div className="relative aspect-square w-full max-w-[472px] overflow-hidden rounded-[15px] border border-slate-200 bg-slate-100 shadow-panel">
             <Image
-              src={directorSection.portrait.src}
-              alt={directorSection.portrait.alt}
+              src={directorSection.portrait}
+              alt={`${displayName}, ${director.title || `Director of ${business.name}`}`}
               fill
               sizes="(min-width: 1024px) 472px, 92vw"
               placeholder="blur"
@@ -21,12 +24,8 @@ export function DirectorMessage() {
             />
           </div>
           <figcaption className="pt-5">
-            <p className="font-display text-[22px] leading-[34px] font-extrabold text-navy-950">
-              {siteConfig.director.name}
-            </p>
-            <p className="font-display text-[14.8px] leading-5 font-semibold text-brand-500">
-              {siteConfig.director.title}
-            </p>
+            <p className="font-display text-[22px] leading-[34px] font-extrabold text-navy-950">{displayName}</p>
+            <p className="font-display text-[14.8px] leading-5 font-semibold text-brand-500">{director.title}</p>
             <p className="text-[14.8px] leading-5 text-slate-500">{directorSection.location}</p>
           </figcaption>
         </Reveal>
@@ -67,7 +66,7 @@ export function DirectorMessage() {
           </div>
 
           <p className="pt-3 font-display text-base leading-[24.6px] font-bold text-navy-950 lg:text-[17.2px]">
-            {directorSection.signature}
+            — Director, {displayName}
           </p>
         </Reveal>
       </div>

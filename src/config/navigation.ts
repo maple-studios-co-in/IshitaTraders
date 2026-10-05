@@ -21,25 +21,31 @@ export const anchor = (id: SectionId) => `#${id}` as const;
 
 export interface NavItem {
   label: string;
+  /** Homepage section that highlights this item while it's being read. */
   sectionId: SectionId;
+  /** A separate page this item opens instead of scrolling to its section. */
+  href?: string;
 }
 
 export const mainNav: NavItem[] = [
   { label: "Home", sectionId: sectionIds.home },
-  { label: "Products", sectionId: sectionIds.products },
-  { label: "Solar Solutions", sectionId: sectionIds.solar },
+  { label: "Products", sectionId: sectionIds.products, href: "/products" },
   { label: "Brands", sectionId: sectionIds.brands },
   { label: "About Us", sectionId: sectionIds.about },
   { label: "Our Clients", sectionId: sectionIds.testimonials },
   { label: "Contact", sectionId: sectionIds.contact },
 ];
 
-/**
- * Destinations for "view products" style CTAs. The dedicated products page is not built yet,
- * so these point at the on-page catalogue; switch them to real routes once it exists.
- */
+/** Where a nav item points: its own page, or its homepage section (absolute when off the homepage). */
+export function navHref(item: NavItem, onHomepage: boolean) {
+  if (item.href) return item.href;
+  return onHomepage ? anchor(item.sectionId) : item.sectionId === sectionIds.home ? "/" : `/${anchor(item.sectionId)}`;
+}
+
+/** Destinations for "view products" style CTAs. */
 export const productLinks = {
-  all: anchor(sectionIds.products),
+  all: "/products",
+  brand: (slug: string) => `/products?brand=${encodeURIComponent(slug)}`,
   featured: anchor(sectionIds.featured),
   solarRange: anchor(sectionIds.solarRange),
 } as const;

@@ -9,7 +9,7 @@ import { Reveal } from "@/components/motion/reveal";
 import { ButtonArrow } from "@/components/ui/button";
 import { SmartLink } from "@/components/ui/smart-link";
 import { sectionIds } from "@/config/navigation";
-import type { ShowcaseSlide } from "@/content/home";
+import type { ResolvedShowcaseSlide as ShowcaseSlide } from "@/content/home";
 import { cn } from "@/lib/cn";
 import { getSmoothScroll } from "@/lib/smooth-scroll";
 
