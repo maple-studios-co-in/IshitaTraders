@@ -56,7 +56,7 @@ export function Toaster() {
       setItems((current) => [...current.slice(-3), item]);
       window.setTimeout(
         () => setItems((current) => current.filter((t) => t.id !== item.id)),
-        item.tone === "error" ? 7000 : 3500,
+        item.tone === "error" ? 7000 : 5000,
       );
     };
     window.addEventListener(EVENT, onToast);
