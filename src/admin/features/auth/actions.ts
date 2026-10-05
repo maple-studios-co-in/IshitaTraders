@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 import type { ActionState } from "@/admin/lib/action-state";
 import { logActivity } from "@/admin/server/audit";
 import { getCurrentUser } from "@/admin/server/auth/guard";
-import { hashPassword, needsRehash, passwordProblem, verifyPassword } from "@/admin/server/auth/password";
+import { hashPassword, needsRehash, verifyPassword } from "@/admin/server/auth/password";
 import { createSession, destroyCurrentSession } from "@/admin/server/auth/session";
 import { DatabaseUnavailableError, getDb } from "@/admin/server/db/client";
 import { sessions, settings, users } from "@/admin/server/db/schema";
@@ -52,10 +52,6 @@ async function applyEnvPasswordReset(user: UserRow, email: string, password: str
       .onConflictDoUpdate({ target: settings.key, set: { value: fingerprint, updatedAt: new Date() } });
   if (await verifyPassword(password, user.passwordHash)) {
     await remember();
-    return null;
-  }
-  if (env.isProduction && passwordProblem(password, { email })) {
-    console.warn("[auth] ADMIN_PASSWORD was changed but is too weak to apply on a live site; choose a stronger one.");
     return null;
   }
 

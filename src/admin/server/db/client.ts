@@ -49,12 +49,26 @@ async function connect(): Promise<Database> {
   return db;
 }
 
+/**
+ * Normalises a connection string for postgres.js. Neon (and other hosts) add libpq-only options
+ * such as `channel_binding`, which postgres.js would forward to the server as a run-time setting —
+ * and the server refuses unknown settings, so every connection would fail.
+ */
+export function normaliseDatabaseUrl(raw: string) {
+  const url = new URL(raw);
+  for (const key of ["channel_binding", "gssencmode", "sslrootcert", "sslcert", "sslkey", "sslcrl"])
+    url.searchParams.delete(key);
+  const local = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+  if (!local && !url.searchParams.has("sslmode")) url.searchParams.set("sslmode", "require");
+  return url.toString();
+}
+
 async function connectPostgres(url: string): Promise<Database> {
   const [{ default: postgres }, { drizzle }] = await Promise.all([
     import("postgres"),
     import("drizzle-orm/postgres-js"),
   ]);
-  const client = postgres(url, {
+  const client = postgres(normaliseDatabaseUrl(url), {
     // Works behind PgBouncer-style poolers (Neon "-pooler" hosts) and on serverless functions.
     prepare: false,
     max: env.isVercel ? 5 : 10,
