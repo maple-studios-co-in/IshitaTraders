@@ -13,7 +13,7 @@ import { Contact } from "@/components/sections/contact";
 import { DirectorMessage } from "@/components/sections/director-message";
 import { Faq } from "@/components/sections/faq";
 import { FeaturedProducts } from "@/components/sections/featured-products";
-import { Hero } from "@/components/sections/hero";
+import { Hero, HeroContactStrip } from "@/components/sections/hero";
 import { Installations } from "@/components/sections/installations";
 import { ProductCategories } from "@/components/sections/product-categories";
 import { ProductShowcase } from "@/components/sections/product-showcase";
@@ -85,24 +85,33 @@ export default async function HomePage() {
   return (
     <>
       <StructuredData settings={settings} brands={catalog.brands.map((brand) => brand.name)} />
-      <SiteHeader contact={settings.contact} businessName={settings.business.name} />
+      <SiteHeader
+        contact={settings.contact}
+        businessName={settings.business.name}
+        overHero
+        counts={{ products: catalog.categories.length, brands: catalog.brands.length }}
+      />
       <main id="main-content" tabIndex={-1} data-page-content className="outline-none">
         <Hero />
-        <BrandPartners />
-        <ProductCategories />
-        <About />
-        <FeaturedProducts />
-        <Contact />
-        <SolarSolutions />
-        <SolarHomeBanner />
-        <WhyChooseUs />
-        <Installations />
-        <SunlightToElectricity />
-        <ProductShowcase slides={slides} />
-        <Testimonials />
-        <DirectorMessage />
-        <Faq />
-        <FinalCta />
+        {/* Slides up over the hero film's last frame (see .hero-film in globals.css). */}
+        <div data-hero-cover className="relative bg-white shadow-[0_-28px_60px_-24px_rgb(0_0_0/0.45)]">
+          <HeroContactStrip />
+          <BrandPartners />
+          <ProductCategories />
+          <About />
+          <FeaturedProducts />
+          <Contact />
+          <SolarSolutions />
+          <SolarHomeBanner />
+          <WhyChooseUs />
+          <Installations />
+          <SunlightToElectricity />
+          <ProductShowcase slides={slides} />
+          <Testimonials />
+          <DirectorMessage />
+          <Faq />
+          <FinalCta />
+        </div>
       </main>
       <SiteFooter />
     </>

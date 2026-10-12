@@ -3,11 +3,12 @@
 import Image from "next/image";
 import { AnimatePresence, m } from "motion/react";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
 import logo from "@/assets/images/brand/logo.png";
+import logoMark from "@/assets/images/brand/logo-mark.png";
 import whatsappLogo from "@/assets/images/icons/whatsapp.png";
-import { CloseIcon, MailOpenIcon, MenuIcon, PhoneIcon } from "@/components/icons";
+import { ArrowRightIcon, CloseIcon, MailOpenIcon, MenuIcon, PhoneIcon } from "@/components/icons";
 import { ButtonLink } from "@/components/ui/button";
 import { contactLinks } from "@/admin/content/links";
 import type { SiteSettings } from "@/admin/content/settings-schema";
@@ -21,8 +22,28 @@ import { lockScroll } from "@/lib/smooth-scroll";
 const TRACKED_SECTION_IDS = [...mainNav.map((item) => item.sectionId), sectionIds.solar];
 const MENU_ID = "mobile-navigation";
 
-/** Site header. Contact buttons come from Admin → Site content → Contact; nav is page-aware. */
-export function SiteHeader({ contact, businessName }: { contact: SiteSettings["contact"]; businessName: string }) {
+/** Item counts shown as badges on the floating hero navigation. */
+export interface NavCounts {
+  products: number;
+  brands: number;
+}
+
+/**
+ * Site header. Contact buttons come from Admin → Site content → Contact; nav is page-aware.
+ * With `overHero` (homepage) it floats over the hero film as frosted pills, and turns into the
+ * white bar once the page slides up over the film (`[data-hero-cover]`).
+ */
+export function SiteHeader({
+  contact,
+  businessName,
+  overHero = false,
+  counts,
+}: {
+  contact: SiteSettings["contact"];
+  businessName: string;
+  overHero?: boolean;
+  counts?: NavCounts;
+}) {
   const pathname = usePathname();
   const onHomepage = pathname === "/";
   const links = useMemo(() => contactLinks(contact), [contact]);
@@ -30,19 +51,35 @@ export function SiteHeader({ contact, businessName }: { contact: SiteSettings["c
   const isActive = (item: (typeof mainNav)[number]) =>
     onHomepage ? item.sectionId === activeSection : Boolean(item.href && pathname.startsWith(item.href));
   const [scrolled, setScrolled] = useState(false);
+  const [overFilm, setOverFilm] = useState(overHero);
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
+  const filmToggleRef = useRef<HTMLButtonElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const cover = overHero ? document.querySelector("[data-hero-cover]") : null;
+    const onScroll = () => {
+      setScrolled(window.scrollY > 8);
+      // Floating until the page content reaches the bottom of the header.
+      if (cover) setOverFilm(cover.getBoundingClientRect().top > (headerRef.current?.offsetHeight ?? 0));
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [overHero]);
+
+  const floating = overHero && overFilm && !menuOpen;
 
   const closeMenu = useCallback((restoreFocus = false) => {
     setMenuOpen(false);
-    if (restoreFocus) toggleRef.current?.focus();
+    if (!restoreFocus) return;
+    const film = filmToggleRef.current;
+    (film && film.offsetParent !== null ? film : toggleRef.current)?.focus();
   }, []);
 
   useEffect(() => {
@@ -70,13 +107,34 @@ export function SiteHeader({ contact, businessName }: { contact: SiteSettings["c
 
   return (
     <header
+      ref={headerRef}
       data-site-header
+      data-floating={floating || undefined}
       className={cn(
-        "sticky top-0 z-50 bg-white transition-shadow duration-300",
-        (scrolled || menuOpen) && "shadow-[0_1px_0_rgb(15_23_42/0.06),0_10px_30px_-18px_rgb(15_23_42/0.35)]",
+        "sticky top-0 z-50 transition-[background-color,box-shadow] duration-300",
+        floating ? "bg-transparent" : "bg-white",
+        !floating &&
+          (scrolled || menuOpen) &&
+          "shadow-[0_1px_0_rgb(15_23_42/0.06),0_10px_30px_-18px_rgb(15_23_42/0.35)]",
       )}
     >
-      <div className="container-site flex h-(--header-h) items-center justify-between gap-4 xl:gap-8">
+      {overHero ? (
+        <FilmNavigation
+          hidden={!floating}
+          businessName={businessName}
+          counts={counts}
+          menuOpen={menuOpen}
+          onToggleMenu={() => setMenuOpen((open) => !open)}
+          toggleRef={filmToggleRef}
+        />
+      ) : null}
+      <div
+        inert={floating}
+        className={cn(
+          "container-site flex h-(--header-h) items-center justify-between gap-4 transition-opacity duration-300 xl:gap-8",
+          floating && "pointer-events-none opacity-0",
+        )}
+      >
         <a
           href={onHomepage ? anchor(sectionIds.home) : "/"}
           className="shrink-0 rounded-md"
@@ -198,5 +256,117 @@ export function SiteHeader({ contact, businessName }: { contact: SiteSettings["c
         ) : null}
       </AnimatePresence>
     </header>
+  );
+}
+
+/** Frosted-pill navigation floating over the hero film (Figma "Floating navigation"). */
+function FilmNavigation({
+  hidden,
+  businessName,
+  counts,
+  menuOpen,
+  onToggleMenu,
+  toggleRef,
+}: {
+  hidden: boolean;
+  businessName: string;
+  counts?: NavCounts;
+  menuOpen: boolean;
+  onToggleMenu: () => void;
+  toggleRef: RefObject<HTMLButtonElement | null>;
+}) {
+  const badges: Partial<Record<string, { count: number; color: string }>> = counts
+    ? {
+        [sectionIds.products]: { count: counts.products, color: "bg-[#89a818]" },
+        [sectionIds.brands]: { count: counts.brands, color: "bg-[#244aa5]" },
+      }
+    : {};
+  // "Contact" becomes the white button at the end instead of a pill.
+  const items = mainNav.filter((item) => item.sectionId !== sectionIds.contact);
+
+  return (
+    <div
+      inert={hidden}
+      className={cn(
+        "absolute inset-x-0 top-0 flex items-start justify-between gap-4 p-3 transition-opacity duration-300 md:p-4",
+        hidden && "pointer-events-none opacity-0",
+      )}
+    >
+      <a
+        href={anchor(sectionIds.home)}
+        aria-label={`${businessName} — back to top`}
+        className="flex h-[42px] shrink-0 items-center gap-2 rounded-[10px] glass-pill pr-3 pl-2 text-white"
+      >
+        {/* 18 KB already; served as-is (the optimizer stalls encoding this mark as a 48px AVIF). */}
+        <Image src={logoMark} alt="" unoptimized loading="eager" className="h-6 w-auto" />
+        <span className="font-wide text-[11px] leading-[1.1] font-bold tracking-[-0.02em] uppercase">
+          Ishita
+          <br />
+          Traders
+        </span>
+      </a>
+
+      <nav
+        aria-label="Primary"
+        className="hidden items-center gap-px rounded-xl bg-black/8 p-0.5 backdrop-blur-[4px] xl:flex"
+      >
+        {items.map((item) => {
+          const badge = badges[item.sectionId];
+          return (
+            <a
+              key={item.sectionId}
+              href={navHref(item, true)}
+              className="flex h-[38px] items-center gap-1.5 rounded-[10px] glass-pill px-3 font-wide text-xs tracking-[-0.03em] text-white transition-colors duration-200 hover:bg-white/20"
+            >
+              {item.label}
+              {badge && badge.count > 0 ? (
+                <span
+                  className={cn(
+                    "grid size-4 place-items-center rounded-full text-[10px] leading-none font-semibold",
+                    badge.color,
+                  )}
+                >
+                  {badge.count}
+                </span>
+              ) : null}
+            </a>
+          );
+        })}
+        <span aria-hidden="true" className="mx-1.5 h-4 w-px rounded-full bg-white/10" />
+        <a
+          href={anchor(sectionIds.contact)}
+          className="group/contact flex h-[38px] items-center gap-2 rounded-[10px] bg-white px-3 font-wide text-xs tracking-[-0.03em] text-[#3d3d3d] transition-colors duration-200 hover:bg-white/90"
+        >
+          Contact us
+          <span className="grid size-4 place-items-center overflow-hidden rounded-full bg-leaf-700 text-white">
+            <ArrowRightIcon className="size-2 transition-transform duration-300 ease-out-expo group-hover/contact:translate-x-0.5" />
+          </span>
+        </a>
+      </nav>
+
+      <div className="flex items-center gap-2 xl:hidden">
+        <a
+          href={anchor(sectionIds.contact)}
+          className="hidden h-[42px] items-center gap-2 rounded-[10px] bg-white px-3 font-wide text-xs tracking-[-0.03em] text-[#3d3d3d] sm:flex"
+        >
+          Contact us
+          <span className="grid size-4 place-items-center rounded-full bg-leaf-700 text-white">
+            <ArrowRightIcon className="size-2" />
+          </span>
+        </a>
+        <button
+          ref={toggleRef}
+          type="button"
+          aria-expanded={menuOpen}
+          aria-controls={MENU_ID}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          onClick={onToggleMenu}
+          className="flex h-[42px] items-center gap-2 rounded-[10px] bg-white px-3.5 font-wide text-xs tracking-[-0.03em] text-[#3d3d3d]"
+        >
+          <MenuIcon className="size-4" />
+          Menu
+        </button>
+      </div>
+    </div>
   );
 }

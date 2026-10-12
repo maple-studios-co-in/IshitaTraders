@@ -134,7 +134,7 @@ implementation; copy its shape.
    and follow-up date, add a note, reply on WhatsApp, export CSV.
 3. **Inbox** – log a phone call; click a WhatsApp button on the website and see it under
    _Contact clicks_; set up webhooks in _Integrations_ for live WhatsApp/email/SMS.
-4. **Site content** – change the phone number, social links, hero headline/image, announcement
+4. **Site content** – change the phone number, social links, hero film captions, announcement
    bar; reload the website. _Reset to original_ undoes a section.
 5. **SEO & audit** – edit titles/descriptions (live Google preview), run the audit, fix issues.
 6. **HTML pages** – upload an `.html` file, publish, open `/<slug>`.

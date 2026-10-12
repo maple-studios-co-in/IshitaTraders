@@ -32,6 +32,12 @@ const nextConfig: NextConfig = {
     return [
       { source: "/:path*", headers: securityHeaders },
       { source: "/admin/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
+      // Hero film frames never change in place (a new cut ships under a new folder), so browsers
+      // and the CDN may keep them forever — repeat visits scrub straight from cache.
+      {
+        source: "/sequences/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
     ];
   },
 };

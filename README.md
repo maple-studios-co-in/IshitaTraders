@@ -6,17 +6,17 @@ Implemented from the Figma file _Ishita Traders → Final work – website → H
 
 ## Tech stack
 
-| Concern       | Choice                                                                  |
-| ------------- | ----------------------------------------------------------------------- |
-| Framework     | Next.js 16 (App Router, React 19, Turbopack) — homepage is fully static |
-| Language      | TypeScript (strict)                                                     |
-| Styling       | Tailwind CSS v4 with design tokens from the Figma file (`globals.css`)  |
-| Motion        | `motion` (LazyMotion, ~15 kB) + CSS keyframes for the hero              |
-| Smooth scroll | Lenis (wheel/trackpad only; native touch; off for reduced motion)       |
-| Forms         | React 19 Server Action + Zod validation (server-only)                   |
-| Images        | `next/image` (AVIF/WebP, responsive `sizes`, blur placeholders)         |
-| Fonts         | `next/font` self-hosted Inter, Plus Jakarta Sans, Outfit, Jost          |
-| Quality       | ESLint (next/core-web-vitals), Prettier + Tailwind class sorting        |
+| Concern       | Choice                                                                         |
+| ------------- | ------------------------------------------------------------------------------ |
+| Framework     | Next.js 16 (App Router, React 19, Turbopack) — homepage is fully static        |
+| Language      | TypeScript (strict)                                                            |
+| Styling       | Tailwind CSS v4 with design tokens from the Figma file (`globals.css`)         |
+| Motion        | `motion` (LazyMotion, ~15 kB); hero = canvas image-sequence scrubbed by scroll |
+| Smooth scroll | Lenis (wheel/trackpad only; native touch; off for reduced motion)              |
+| Forms         | React 19 Server Action + Zod validation (server-only)                          |
+| Images        | `next/image` (AVIF/WebP, responsive `sizes`, blur placeholders)                |
+| Fonts         | `next/font` self-hosted Inter, Plus Jakarta Sans, Outfit, Jost, Archivo        |
+| Quality       | ESLint (next/core-web-vitals), Prettier + Tailwind class sorting               |
 
 ## Getting started
 
@@ -46,6 +46,7 @@ src/
 ├─ app/                        Routes, metadata (robots, sitemap, manifest), icons, error/404 pages
 ├─ assets/images/              Optimised WebP/PNG assets exported from Figma
 ├─ components/
+│  ├─ hero/                    Homepage hero film: frame player, scroll controller, loader
 │  ├─ icons.tsx                Generated SVG icon set (from the Figma exports)
 │  ├─ layout/                  Site header (scroll-spy, mobile menu) and footer
 │  ├─ motion/                  Reveal-on-scroll primitives, lazily loaded drag features
@@ -54,6 +55,7 @@ src/
 │  └─ ui/                      Button, SmartLink, section headings
 ├─ config/                     Site facts (phone, email, address) and section anchors
 ├─ content/home.ts             All homepage copy and image references — edit content here
+├─ content/hero.ts            Hero film choreography (frames, scroll distances, cards, hotspots)
 ├─ hooks/                      Client hooks (active-section tracking)
 └─ lib/                        Utilities (class merging, WhatsApp/phone links, contact delivery)
 ```
@@ -78,6 +80,12 @@ See `.env.example`.
 
 ## Behaviour notes
 
+- **Hero film** — a 140-frame sequence (`public/sequences/hero-v1`) scrubbed by scroll on a canvas, with
+  eight caption scenes (editable in Admin → Site content → Hero), a "charging" loader while the opening
+  frames load, frosted-pill navigation over the film and the page sliding up over its last frame.
+  Phones get centre-cropped portrait frames (`tall/`, about a quarter of the bytes). Reduced motion or
+  no JavaScript show the opening still as a plain banner. Frames are cached forever, so a new cut must
+  ship under a new folder (`hero-v2`) — update the paths in `src/content/hero.ts`.
 - **Navigation** — in-page anchors with a sticky header; the active nav item follows the section being read.
 - **"Solar range" showcase** — on desktop the section pins while you scroll through Solar Panels → Inverters →
   Batteries (matching the three Figma variants); on tablets/phones it becomes stacked cards.
@@ -96,6 +104,9 @@ Security headers (HSTS, X-Frame-Options, nosniff, Referrer-Policy, Permissions-P
 
 ## Open items
 
+- **Hero film frames** (`public/sequences/hero-v1`) are the FAERS reference sequence (source URLs in the
+  design package's `provenance.json`); they are not Ishita footage. License them from FAERS or replace
+  them with Ishita's own film before launch.
 - Product/brand "View … Products" buttons point to the on-page catalogue until the Products page is built —
   update `productLinks` in `src/config/navigation.ts` when it exists.
 - Social profile URLs are not in the design; add them to `siteConfig.socials` and the footer icons appear.

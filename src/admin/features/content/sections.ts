@@ -20,7 +20,7 @@ export const contentSections = [
   {
     key: "hero",
     label: "Homepage hero banner",
-    description: "The first screen of the homepage: headline, text, image and brands.",
+    description: "The scroll film at the top of the homepage: its eight captions, the brand row and the help line.",
   },
   {
     key: "announcement",
