@@ -31,6 +31,7 @@ export function toCatalogueProduct(product: PublicProduct): CatalogueProduct {
         }
       : null,
     category: product.category?.name ?? "",
+    categorySlug: product.category?.slug ?? "",
     typeLabel: product.typeLabel,
     subtitle: product.subtitle,
     badge: product.badge.trim(),

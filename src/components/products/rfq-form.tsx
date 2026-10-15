@@ -78,7 +78,11 @@ export function RfqSection({
           >
             {title}
           </h3>
-          {subtitle ? <p className="font-display text-[11px] leading-[16.5px] text-slate-500">{subtitle}</p> : null}
+          {subtitle ? (
+            <p className="font-display text-[11px] leading-[16.5px] text-slate-500 max-md:text-[13px] max-md:leading-5">
+              {subtitle}
+            </p>
+          ) : null}
         </div>
         <span
           aria-hidden="true"
@@ -176,16 +180,16 @@ export function RfqSection({
               href={whatsappHref}
               variant="outline"
               aria-label={`WhatsApp Us about ${productName} (opens in a new tab)`}
-              className="h-11 gap-2.5 rounded-[6.2px] px-3 font-display text-[12px] font-bold sm:h-[34px] sm:w-[152px]"
+              className="h-11 gap-2.5 rounded-[6.2px] px-3 font-display text-[12px] font-bold max-[359px]:gap-1.5 max-[359px]:px-2 sm:h-[34px] sm:w-[152px]"
             >
-              <Image src={whatsappLogo} alt="" width={24} height={24} className="size-6" />
+              <Image src={whatsappLogo} alt="" width={24} height={24} className="size-6 max-[359px]:size-5" />
               WhatsApp Us
             </ButtonLink>
             <ButtonLink
               href={links.phone}
               variant="accent"
               aria-label={`Call ${phoneDisplay}`}
-              className="h-11 gap-2.5 rounded-[6.2px] px-3 font-display text-[12px] font-semibold sm:h-[34px] sm:w-[152px]"
+              className="h-11 gap-2.5 rounded-[6.2px] px-3 font-display text-[12px] font-semibold max-[359px]:gap-1.5 max-[359px]:px-2 sm:h-[34px] sm:w-[152px]"
             >
               <PhoneIcon className="size-[17px]" />
               {phoneDisplay}
@@ -256,7 +260,7 @@ function Field({
     <div className={cn("flex min-w-0 flex-col gap-1", className)}>
       <label
         htmlFor={id}
-        className="font-display text-[11px] leading-[16.5px] font-bold tracking-[0.05em] text-slate-700 uppercase"
+        className="font-display text-[11px] leading-[16.5px] font-bold tracking-[0.05em] text-slate-700 uppercase max-md:text-[12px]"
       >
         {rfqFieldLabels[name]}{" "}
         <span aria-hidden="true" className="text-red-500">

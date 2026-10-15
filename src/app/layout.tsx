@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Inter, Jost, Outfit, Plus_Jakarta_Sans } from "next/font/google";
+import { Archivo, Inter, Plus_Jakarta_Sans } from "next/font/google";
 
 import { imageUrl } from "@/admin/content/images";
 import { getSiteSettings } from "@/admin/content/settings";
@@ -9,16 +9,8 @@ import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", display: "swap" });
-// Display faces used by single sections below the fold — not preloaded.
-const outfit = Outfit({
-  subsets: ["latin"],
-  weight: ["800"],
-  variable: "--font-outfit-face",
-  display: "swap",
-  preload: false,
-});
-const jost = Jost({ subsets: ["latin"], variable: "--font-jost-face", display: "swap", preload: false });
-// The homepage hero's wide grotesk (Archivo Expanded = width 125). One variable file covers it all.
+// The website design's face: Archivo (regular and bold) and Archivo Expanded (width 125) for the
+// hero loader. One variable file covers both.
 const archivo = Archivo({ subsets: ["latin"], axes: ["wdth"], variable: "--font-archivo-face", display: "swap" });
 
 /** Site-wide SEO defaults, editable in Admin → SEO. Pages add their own title and canonical URL. */
@@ -63,10 +55,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en-IN"
-      className={`${inter.variable} ${jakarta.variable} ${outfit.variable} ${jost.variable} ${archivo.variable}`}
-    >
+    <html lang="en-IN" className={`${inter.variable} ${jakarta.variable} ${archivo.variable}`}>
       <body>{children}</body>
     </html>
   );

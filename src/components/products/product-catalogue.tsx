@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import whatsappLogo from "@/assets/images/icons/whatsapp.png";
 import { contactLinks } from "@/admin/content/links";
+import { CloseIcon } from "@/components/icons";
 import { Reveal } from "@/components/motion/reveal";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
@@ -17,18 +18,20 @@ import { ProductDialog } from "./product-dialog";
 import type { CatalogueProduct, CatalogueProps } from "./types";
 
 /** Query parameters this page owns; anything else in the URL (utm_*, …) is left untouched. */
-const PARAMS = { brand: "brand", q: "q", app: "app", product: "product" } as const;
+const PARAMS = { brand: "brand", q: "q", app: "app", category: "category", product: "product" } as const;
 
 interface Filters {
   brand: string;
   q: string;
   app: string;
+  /** Category slugs (a product in any of them matches) — set by links such as the homepage's product cards. */
+  categories: string[];
   product: string;
 }
 
 /**
  * The interactive catalogue: brand tabs, search, application filter, the grid and the details
- * popup, all reflected in a shareable URL (?brand=…&q=…&app=…&product=…).
+ * popup, all reflected in a shareable URL (?brand=…&q=…&app=…&category=…&product=…).
  */
 export function ProductCatalogue(props: CatalogueProps) {
   const searchParams = useSearchParams();
@@ -59,10 +62,17 @@ function readFilters(
   const brand = (params.get(PARAMS.brand) ?? "").trim().toLowerCase();
   const app = (params.get(PARAMS.app) ?? "").trim().toLowerCase();
   const product = (params.get(PARAMS.product) ?? "").trim();
+  // Only categories that have products count, so a stale link shows the whole catalogue, never an empty grid.
+  const known = new Set(products.map((item) => item.categorySlug).filter(Boolean));
+  const categories = (params.get(PARAMS.category) ?? "")
+    .split(",")
+    .map((slug) => slug.trim().toLowerCase())
+    .filter((slug, index, all) => known.has(slug) && all.indexOf(slug) === index);
   return {
     brand: brands.some((item) => item.slug === brand) ? brand : "",
     q: (params.get(PARAMS.q) ?? "").slice(0, 100),
     app: applications.find((item) => item.toLowerCase() === app) ?? "",
+    categories,
     product: products.some((item) => item.slug === product) ? product : "",
   };
 }
@@ -107,11 +117,12 @@ function CatalogueBrowser({
     const app = filters.app.toLowerCase();
     return products.filter((product) => {
       if (filters.brand && product.brand?.slug !== filters.brand) return false;
+      if (filters.categories.length > 0 && !filters.categories.includes(product.categorySlug)) return false;
       if (app && !product.applications.some((item) => item.toLowerCase() === app)) return false;
       const haystack = haystacks.get(product.slug) ?? "";
       return terms.every((term) => haystack.includes(term));
     });
-  }, [products, haystacks, filters.brand, filters.app, filters.q]);
+  }, [products, haystacks, filters.brand, filters.categories, filters.app, filters.q]);
 
   // Typing settles for a moment before the address bar follows.
   useEffect(() => {
@@ -129,6 +140,7 @@ function CatalogueBrowser({
     if (filters.brand) params.set(PARAMS.brand, filters.brand);
     if (urlQuery.trim()) params.set(PARAMS.q, urlQuery.trim());
     if (filters.app) params.set(PARAMS.app, filters.app);
+    if (filters.categories.length > 0) params.set(PARAMS.category, filters.categories.join(","));
     if (filters.product) params.set(PARAMS.product, filters.product);
     const next = params.toString();
     if (next === before) return;
@@ -137,7 +149,7 @@ function CatalogueBrowser({
       "",
       `${window.location.pathname}${next ? `?${next}` : ""}${window.location.hash}`,
     );
-  }, [syncUrl, filters.brand, filters.app, filters.product, urlQuery]);
+  }, [syncUrl, filters.brand, filters.app, filters.categories, filters.product, urlQuery]);
 
   const update = (patch: Partial<Filters>) => {
     setFilters((current) => ({ ...current, ...patch }));
@@ -160,13 +172,17 @@ function CatalogueBrowser({
   };
 
   const resetFilters = () => {
-    setFilters((current) => ({ ...current, brand: "", q: "", app: "" }));
+    setFilters((current) => ({ ...current, brand: "", q: "", app: "", categories: [] }));
     setUrlQuery("");
     searchInput.current?.focus();
   };
 
   const openProductData = products.find((product) => product.slug === filters.product) ?? null;
   const brandName = brands.find((brand) => brand.slug === filters.brand)?.name;
+  const categoryLabel = filters.categories
+    .map((slug) => products.find((product) => product.categorySlug === slug)?.category)
+    .filter(Boolean)
+    .join(" & ");
   const total = products.length;
 
   return (
@@ -243,6 +259,21 @@ function CatalogueBrowser({
         </div>
       </Reveal>
 
+      {categoryLabel ? (
+        <p className="mt-5 flex flex-wrap items-center gap-2.5 text-[15px] text-body lg:mt-6">
+          Showing
+          <button
+            type="button"
+            onClick={() => update({ categories: [] })}
+            className="inline-flex h-9 items-center gap-2 rounded-full bg-navy-900 pr-2.5 pl-4 text-sm font-semibold text-white transition-colors hover:bg-navy-800"
+          >
+            {categoryLabel}
+            <CloseIcon className="size-3.5" />
+            <span className="sr-only">— show every category</span>
+          </button>
+        </p>
+      ) : null}
+
       <p role="status" className="sr-only">
         {visible.length === total ? `Showing all ${total} products` : `Showing ${visible.length} of ${total} products`}
       </p>
@@ -279,7 +310,7 @@ function CatalogueBrowser({
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             {total > 0 ? <Button onClick={resetFilters}>Reset filters</Button> : null}
             <ButtonLink
-              href={links.whatsapp(enquiryMessage(filters, brandName))}
+              href={links.whatsapp(enquiryMessage(filters, brandName, categoryLabel))}
               variant="outline"
               aria-label="Ask on WhatsApp (opens in a new tab)"
               className="gap-2 pl-3"
@@ -303,8 +334,8 @@ function CatalogueBrowser({
   );
 }
 
-function enquiryMessage(filters: Filters, brandName?: string) {
-  const what = filters.q.trim() ? `“${filters.q.trim()}”` : "a product";
+function enquiryMessage(filters: Filters, brandName?: string, categoryLabel?: string) {
+  const what = filters.q.trim() ? `“${filters.q.trim()}”` : categoryLabel ? categoryLabel.toLowerCase() : "a product";
   const from = brandName ? ` from ${brandName}` : "";
   const use = filters.app ? ` for ${filters.app.toLowerCase()} use` : "";
   return `Hi Ishita Traders, I'm looking for ${what}${from}${use}. Could you share the options, price and availability?`;

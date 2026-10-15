@@ -168,11 +168,11 @@ export const settingsKeys = Object.keys(settingsSchemas) as SettingsKey[];
 export const defaultSettings: SiteSettings = {
   business: {
     name: siteConfig.name,
-    tagline: "Battery | Inverter | Solar",
+    tagline: "Reliable Power. Smarter Solar.",
     foundedYear: siteConfig.foundedYear,
     footerBlurb:
       "Distributor and turnkey power solutions provider, serving primarily Champaran and across Bihar since 2014.",
-    copyright: "© Ishita Traders. All Rights Reserved. Estd. 2014, Chakia, East Champaran, Bihar.",
+    copyright: "© {year} Ishita Traders.",
     director: {
       honorific: siteConfig.director.honorific,
       name: siteConfig.director.name,

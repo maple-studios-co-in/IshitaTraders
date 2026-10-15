@@ -4,27 +4,27 @@ import Image from "next/image";
 import { useEffect, useRef, type CSSProperties, type Ref } from "react";
 
 import logoMark from "@/assets/images/brand/logo-mark.png";
+import { ArrowIcon } from "@/components/home/icons";
 import { sectionIds } from "@/config/navigation";
-import { frameUrl, heroCards, heroCredit, heroFilm, heroHotspots, heroScrollCue, type HeroCard } from "@/content/hero";
+import { frameUrl, heroCards, heroCredit, heroFilm, heroScrollCue, type HeroCard } from "@/content/hero";
 import { heroSceneSizes } from "@/content/hero-scenes";
-import { cn } from "@/lib/cn";
 
 import { startHeroFilm } from "./hero-controller";
 
 const TALL_MEDIA = `(max-aspect-ratio: ${Math.round(heroFilm.tallBelowAspect * 100)}/100)`;
 
 /**
- * Homepage hero — a scroll-scrubbed film with caption scenes, floating corner cards and a
- * "charging" loader (src/components/hero/hero-controller.ts drives it). The markup is complete
- * without JavaScript: the opening still, the page heading and every link render on the server.
+ * Homepage hero — a scroll-scrubbed film with caption scenes, the white corner cards and the
+ * brand row of Figma "Hero / Opening", and a "charging" loader (hero-controller.ts drives it).
+ * The markup is complete without JavaScript: the opening still, the page heading and every link
+ * render on the server.
  */
 export function HeroFilm({ scenes, brands }: { scenes: string[]; brands: string[] }) {
   const sectionRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const loaderRef = useRef<HTMLDivElement>(null);
-  const cueRef = useRef<HTMLParagraphElement>(null);
+  const cueRef = useRef<HTMLSpanElement>(null);
   const sceneRefs = useRef<(HTMLElement | null)[]>([]);
-  const hotspotRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -37,7 +37,6 @@ export function HeroFilm({ scenes, brands }: { scenes: string[]; brands: string[
       cue: cueRef.current,
       cards: [...section.querySelectorAll<HTMLElement>(".hero-card")],
       scenes: sceneRefs.current.filter((node): node is HTMLElement => node !== null),
-      hotspots: hotspotRefs.current.filter((node): node is HTMLDivElement => node !== null),
     });
   }, []);
 
@@ -64,7 +63,7 @@ export function HeroFilm({ scenes, brands }: { scenes: string[]; brands: string[
           />
         </picture>
         <canvas ref={canvasRef} aria-hidden="true" className="hero-canvas" />
-        <div aria-hidden="true" className="absolute inset-0 bg-black/16" />
+        <div aria-hidden="true" className="absolute inset-0 bg-black/8" />
 
         <div className="absolute inset-x-0 top-0 h-svh">
           {scenes.map((text, index) => {
@@ -86,53 +85,27 @@ export function HeroFilm({ scenes, brands }: { scenes: string[]; brands: string[
             );
           })}
 
-          <p ref={cueRef} aria-hidden="true" className="hero-cue">
-            {heroScrollCue}
+          <p aria-hidden="true" className="hero-cue">
+            <span ref={cueRef}>{heroScrollCue}</span>
+            <span className="ml-[0.6em]">↓</span>
           </p>
 
-          {heroHotspots.map((spot, index) => (
-            <div
-              key={spot.label}
-              ref={(node) => {
-                hotspotRefs.current[index] = node;
-              }}
-              aria-hidden="true"
-              className="hero-hotspot"
+          <p className="absolute bottom-[calc(max(7px,env(safe-area-inset-bottom))+132px)] left-[17px] text-[9px] leading-[1.5] text-white md:bottom-[100px] md:text-[10px]">
+            {heroCredit}
+          </p>
+          {brands.length > 0 ? (
+            <ul
+              aria-label="Brands we supply"
+              className="absolute inset-x-[17px] bottom-[calc(max(7px,env(safe-area-inset-bottom))+95px)] flex flex-wrap justify-center gap-x-[1.6em] text-[11px] leading-[1.5] font-bold text-white uppercase md:bottom-[44px] md:text-[14px]"
             >
-              <span className="grid size-8 place-items-center rounded-lg glass-pill text-white">
-                <BoltIcon className="size-4" />
-              </span>
-              <span className="rounded-lg glass-pill px-3 py-2 font-wide text-xs leading-4 tracking-[-0.03em] text-white">
-                {spot.label}
-              </span>
-            </div>
-          ))}
-
-          <div className="absolute inset-x-3 bottom-3 flex flex-col gap-3 md:inset-x-4 md:bottom-4">
-            <p className="font-wide text-[9px] leading-normal text-white/80 md:text-[10px]">{heroCredit}</p>
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
-              <HeroCardLink card={heroCards.savings} className="max-md:hidden" />
-              {brands.length > 0 ? (
-                <ul
-                  aria-label="Brands we supply"
-                  className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 opacity-80 md:flex-1 xl:gap-x-7"
-                >
-                  {brands.map((brand) => (
-                    <li
-                      key={brand}
-                      className="flex items-center gap-1.5 font-wide text-[11px] font-bold tracking-[0.02em] text-white uppercase md:text-[13px]"
-                    >
-                      <BoltIcon className="size-3 text-[#b8d84a]" />
-                      {brand}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-              <div className="flex gap-2.5 md:contents">
-                <HeroCardLink card={heroCards.savings} className="flex-1 md:hidden" />
-                <HeroCardLink card={heroCards.products} className="flex-1 md:flex-none" />
-              </div>
-            </div>
+              {brands.map((brand) => (
+                <li key={brand}>{brand}</li>
+              ))}
+            </ul>
+          ) : null}
+          <div className="absolute inset-x-[17px] bottom-[max(7px,env(safe-area-inset-bottom))] flex justify-between gap-2 md:bottom-[17px]">
+            <HeroCardLink card={heroCards.savings} />
+            <HeroCardLink card={heroCards.products} />
           </div>
         </div>
       </div>
@@ -146,53 +119,23 @@ export function HeroFilm({ scenes, brands }: { scenes: string[]; brands: string[
   );
 }
 
-function HeroCardLink({ card, className }: { card: HeroCard; className?: string }) {
-  const [first, ...rest] = card.title.split(" ");
+/** Figma "Hero / Corner action": two lines of text and the lime orb. */
+function HeroCardLink({ card }: { card: HeroCard }) {
   return (
     <a
       href={card.href}
-      aria-label={card.title}
-      className={cn(
-        "hero-card group relative flex h-[71px] min-w-0 items-center gap-4 overflow-hidden rounded-[24px] bg-white pr-2 pl-4 text-[#0b0b0b] shadow-[0_10px_30px_-14px_rgb(0_0_0/0.45)] md:h-20 md:pl-6",
-        className,
-      )}
+      className="hero-card group flex h-[71px] max-w-[145px] min-w-0 flex-1 basis-0 items-center justify-between rounded-[24px] bg-white pr-[7px] pl-3 text-[13px] leading-[1.5] text-ish-ink shadow-[0_10px_30px_-14px_rgb(0_0_0/0.45)] min-[360px]:text-[14px] md:w-[170px] md:max-w-none md:flex-none"
     >
-      <CardWave />
-      <span className="relative font-wide text-[13px] leading-[1.2] tracking-[-0.04em] md:text-sm">
-        {first}
-        <br />
-        {rest.join(" ")}
+      <span className="min-w-0">
+        <span className="block">{card.lines[0]}</span> <span className="block">{card.lines[1]}</span>
       </span>
-      <span className="relative hidden gap-3 xl:flex">
-        {card.thumbs.map((thumb) => (
-          <Image
-            key={thumb.alt}
-            src={thumb.src}
-            alt=""
-            sizes="68px"
-            className="h-12 w-[68px] rounded-[10px] object-cover"
-          />
-        ))}
-      </span>
-      <span className="hero-card-arrow ml-auto" aria-hidden="true">
-        <ChevronIcon />
-        <ChevronIcon />
+      <span
+        aria-hidden="true"
+        className="grid size-[42px] shrink-0 place-items-center overflow-hidden rounded-full bg-ish-lime text-white transition-colors duration-300 group-hover:bg-ish-lime-deep"
+      >
+        <ArrowIcon className="size-[18px] transition-transform duration-500 ease-out-expo group-hover:-rotate-45" />
       </span>
     </a>
-  );
-}
-
-/** The lime "energy" wave in each card's corner, behind the arrow. */
-function CardWave() {
-  return (
-    <svg
-      viewBox="0 0 132 80"
-      aria-hidden="true"
-      className="hero-card-wave pointer-events-none absolute top-0 right-0 h-full w-auto"
-    >
-      <path d="M56 0H132V80H117C128 67 131 49 122 33C113 17 94 9 75 7C65 6 59 4 56 0Z" fill="#c3dc5c" />
-      <path d="M83 0H132V52C127 35 116 21 100 16C91 13 86 8 83 0Z" fill="#89a818" />
-    </svg>
   );
 }
 
@@ -230,21 +173,5 @@ function HeroLoader({ ref }: { ref: Ref<HTMLDivElement> }) {
         </span>
       </p>
     </div>
-  );
-}
-
-function BoltIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" className={className}>
-      <path d="M9.6 1.2 3.4 9.1c-.2.3 0 .7.4.7h3.4l-1 4.9c-.1.5.5.8.8.4l6.2-7.9c.2-.3 0-.7-.4-.7H9.4l1-4.9c.1-.5-.5-.8-.8-.4Z" />
-    </svg>
-  );
-}
-
-function ChevronIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" className="size-5 text-leaf-700" aria-hidden="true">
-      <path d="m8 5 5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   );
 }

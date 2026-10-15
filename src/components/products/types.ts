@@ -13,6 +13,7 @@ export interface CatalogueProduct {
   /** `short` is the first word of the brand name ("UTL" for "UTL Solar"), used on chips. */
   brand: { slug: string; name: string; short: string } | null;
   category: string;
+  categorySlug: string;
   typeLabel: string;
   subtitle: string;
   badge: string;

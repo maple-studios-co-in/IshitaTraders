@@ -1,4 +1,14 @@
 import type { NextConfig } from "next";
+import { networkInterfaces } from "node:os";
+
+/**
+ * `next dev` only serves its scripts to known hosts. Allow this machine's own network addresses so
+ * the site can be opened on a real phone on the same Wi-Fi (http://<laptop-ip>:3070). Dev-only.
+ */
+const lanHosts = Object.values(networkInterfaces())
+  .flat()
+  .filter((net) => net && net.family === "IPv4" && !net.internal)
+  .map((net) => net!.address);
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -11,6 +21,7 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  allowedDevOrigins: lanHosts,
   // The embedded dev database loads its WebAssembly build from disk, so it must not be bundled.
   serverExternalPackages: ["@electric-sql/pglite"],
   // Database migrations are applied at runtime on first use; ship the SQL files with every function.

@@ -161,7 +161,7 @@ export function BusinessForm({ values, isCustomised }: { values: SiteSettings["b
           label="Tagline"
           defaultValue={values.tagline}
           maxLength={80}
-          hint="Under the logo in the footer."
+          hint="The footer’s last line, after the copyright."
         />
         <TextField name="foundedYear" label="Established (year)" defaultValue={values.foundedYear} type="number" />
         <TextField
@@ -178,8 +178,15 @@ export function BusinessForm({ values, isCustomised }: { values: SiteSettings["b
         defaultValue={values.footerBlurb}
         multiline
         maxLength={400}
+        hint="Not shown in the current website design."
       />
-      <TextField name="copyright" label="Copyright line" defaultValue={values.copyright} maxLength={200} />
+      <TextField
+        name="copyright"
+        label="Copyright line"
+        defaultValue={values.copyright}
+        maxLength={200}
+        hint="The footer’s last line. {year} becomes the current year."
+      />
       <SubHeading>Director</SubHeading>
       <div className="grid gap-5 sm:grid-cols-[120px_1fr_1fr]">
         <TextField
