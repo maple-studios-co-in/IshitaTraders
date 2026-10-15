@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Jost, Outfit, Plus_Jakarta_Sans } from "next/font/google";
+import { Archivo, Inter, Jost, Outfit, Plus_Jakarta_Sans } from "next/font/google";
 
 import { imageUrl } from "@/admin/content/images";
 import { getSiteSettings } from "@/admin/content/settings";
@@ -18,6 +18,8 @@ const outfit = Outfit({
   preload: false,
 });
 const jost = Jost({ subsets: ["latin"], variable: "--font-jost-face", display: "swap", preload: false });
+// The homepage hero's wide grotesk (Archivo Expanded = width 125). One variable file covers it all.
+const archivo = Archivo({ subsets: ["latin"], axes: ["wdth"], variable: "--font-archivo-face", display: "swap" });
 
 /** Site-wide SEO defaults, editable in Admin → SEO. Pages add their own title and canonical URL. */
 export async function generateMetadata(): Promise<Metadata> {
@@ -61,7 +63,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en-IN" className={`${inter.variable} ${jakarta.variable} ${outfit.variable} ${jost.variable}`}>
+    <html
+      lang="en-IN"
+      className={`${inter.variable} ${jakarta.variable} ${outfit.variable} ${jost.variable} ${archivo.variable}`}
+    >
       <body>{children}</body>
     </html>
   );

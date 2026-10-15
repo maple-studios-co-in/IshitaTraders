@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { siteConfig } from "@/config/site";
+import { defaultHeroScenes, HERO_SCENE_COUNT } from "@/content/hero-scenes";
 
 import { staticImage, type FileRef, type ImageRef } from "./images";
 
@@ -79,14 +80,23 @@ export const socialSchema = z.object({
   youtube: optionalUrl,
 });
 
+/** A hero caption: one line, or two when the editor presses Enter. */
+const heroCaption = z
+  .string()
+  .trim()
+  .max(90)
+  .refine((value) => value.split("\n").length <= 2, "Use at most two lines.");
+
 export const heroSchema = z.object({
-  eyebrow: line(60),
-  established: line(40),
-  titleLines: z.array(line(60)).min(1).max(3),
-  description: line(400),
-  trustedBrandsLabel: line(40),
+  /** One caption per scene of the scroll film; the first is the page's main heading. */
+  scenes: z
+    .array(heroCaption)
+    .length(HERO_SCENE_COUNT)
+    .refine((scenes) => scenes[0] !== "", {
+      message: "The opening line is the page's main heading, so it can't be empty.",
+      path: [0],
+    }),
   trustedBrands: z.array(line(30)).max(8),
-  image: imageRefSchema,
   helpQuestion: line(120),
   helpLabel: line(120),
 });
@@ -188,14 +198,8 @@ export const defaultSettings: SiteSettings = {
   },
   social: { facebook: "", linkedin: "", x: "", instagram: "", youtube: "" },
   hero: {
-    eyebrow: "Ishita Traders",
-    established: "Estd. 2014",
-    titleLines: ["Reliable Power.", "Smarter Solar."],
-    description:
-      "Solar • Inverters • Batteries • Electrical Solutions. Trusted products and power solutions for homes, businesses and institutions.",
-    trustedBrandsLabel: "Trusted Brands:",
-    trustedBrands: ["UTL", "EXIDE", "MICROTEK"],
-    image: staticImage("hero/solar-farm", "Rows of solar panels installed across a village landscape in Bihar"),
+    scenes: defaultHeroScenes,
+    trustedBrands: ["UTL SOLAR", "EXIDE", "MICROTEK"],
     helpQuestion: "Need help choosing the right product?",
     helpLabel: "Call our Chakia technical desk:",
   },

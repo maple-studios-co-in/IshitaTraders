@@ -13,6 +13,7 @@ import { useFormAction } from "@/admin/components/ui/use-form-action";
 import { useUnsavedChanges } from "@/admin/components/ui/use-unsaved-changes";
 import type { SettingsKey, SiteSettings } from "@/admin/content/settings-schema";
 import { ImageField } from "@/admin/features/media/image-field";
+import { heroSceneHints } from "@/content/hero-scenes";
 import { cn } from "@/lib/cn";
 
 import { resetSettings, saveSettings } from "./actions";
@@ -331,95 +332,68 @@ export function SocialForm({ values, isCustomised }: { values: SiteSettings["soc
   );
 }
 
-function LinesInput({
-  name,
-  defaultValue,
-  max,
-  placeholder,
-}: {
-  name: string;
-  defaultValue: string[];
-  max: number;
-  placeholder: string;
-}) {
-  const { errors, markDirty } = useSettingsForm();
-  const [lines, setLines] = useState(defaultValue.length ? defaultValue : [""]);
-  const update = (next: string[]) => {
-    setLines(next);
-    markDirty();
-  };
-  return (
-    <div className="flex flex-col gap-2">
-      {lines.map((line, index) => (
-        <div key={index} className="flex gap-2">
-          <input
-            value={line}
-            maxLength={60}
-            onChange={(event) => update(lines.map((item, i) => (i === index ? event.target.value : item)))}
-            placeholder={placeholder}
-            aria-label={`Line ${index + 1}`}
-            className={cn(controlClass, "h-10")}
-          />
-          {lines.length > 1 ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => update(lines.filter((_, i) => i !== index))}
-              aria-label={`Remove line ${index + 1}`}
-            >
-              <Trash2 />
-            </Button>
-          ) : null}
-        </div>
-      ))}
-      {lines.length < max ? (
-        <Button variant="ghost" size="sm" className="self-start" onClick={() => update([...lines, ""])}>
-          <Plus /> Add line
-        </Button>
-      ) : null}
-      {errors[name] ? (
-        <p className="text-xs font-medium text-red-600" role="alert">
-          {errors[name]}
-        </p>
-      ) : null}
-      <input type="hidden" name={name} value={JSON.stringify(lines.map((line) => line.trim()).filter(Boolean))} />
-    </div>
-  );
-}
-
 export function HeroForm({ values, isCustomised }: { values: SiteSettings["hero"]; isCustomised: boolean }) {
   return (
-    <SettingsForm section="hero" json={["titleLines", "trustedBrands", "image"]} isCustomised={isCustomised}>
-      <FormGrid>
-        <TextField name="eyebrow" label="Small heading" defaultValue={values.eyebrow} maxLength={60} />
-        <TextField name="established" label="Established badge" defaultValue={values.established} maxLength={40} />
-      </FormGrid>
-      <Field label="Headline" hint="Each line starts on a new line on large screens (max 3).">
-        <LinesInput name="titleLines" defaultValue={values.titleLines} max={3} placeholder="Reliable Power." />
+    <SettingsForm section="hero" json={["scenes", "trustedBrands"]} isCustomised={isCustomised}>
+      <Field
+        label="Scroll story captions"
+        hint="The hero is a film that plays as visitors scroll. Each caption shows during one scene — keep them short. Press Enter for a second line."
+      >
+        <HeroScenes defaultValue={values.scenes} />
       </Field>
-      <TextField name="description" label="Description" defaultValue={values.description} multiline maxLength={400} />
-      <ImageSetting
-        name="image"
-        label="Background image"
-        defaultValue={values.image}
-        required
-        aspect="16/9"
-        hint="A wide landscape photo (at least 1920 px wide) works best."
-      />
+      <Field label="Brands" hint="Shown along the bottom of the film. Press Enter after each.">
+        <HeroBrands defaultValue={values.trustedBrands} />
+      </Field>
       <FormGrid>
-        <TextField
-          name="trustedBrandsLabel"
-          label="Brands label"
-          defaultValue={values.trustedBrandsLabel}
-          maxLength={40}
-        />
-        <Field label="Brands" hint="Press Enter after each.">
-          <HeroBrands defaultValue={values.trustedBrands} />
-        </Field>
         <TextField name="helpQuestion" label="Help question" defaultValue={values.helpQuestion} maxLength={120} />
         <TextField name="helpLabel" label="Help line text" defaultValue={values.helpLabel} maxLength={120} />
       </FormGrid>
     </SettingsForm>
+  );
+}
+
+function HeroScenes({ defaultValue }: { defaultValue: string[] }) {
+  const { errors, markDirty } = useSettingsForm();
+  const [scenes, setScenes] = useState(defaultValue);
+  return (
+    <ol className="flex flex-col gap-3">
+      {scenes.map((scene, index) => {
+        const error = errors[`scenes.${index}`];
+        const id = `s-scene-${index}`;
+        return (
+          <li key={index} className="flex gap-3">
+            <span className="mt-2 flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">
+              {index + 1}
+            </span>
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <Textarea
+                id={id}
+                value={scene}
+                rows={scene.includes("\n") ? 2 : 1}
+                maxLength={90}
+                onChange={(event) => {
+                  setScenes(scenes.map((item, i) => (i === index ? event.target.value : item)));
+                  markDirty();
+                }}
+                aria-label={`Caption ${index + 1}`}
+                aria-describedby={`${id}-hint`}
+                aria-invalid={!!error || undefined}
+                className="min-h-10 resize-none"
+              />
+              <p id={`${id}-hint`} className="text-xs text-slate-500">
+                {heroSceneHints[index]}
+              </p>
+              {error ? (
+                <p className="text-xs font-medium text-red-600" role="alert">
+                  {error}
+                </p>
+              ) : null}
+            </div>
+          </li>
+        );
+      })}
+      <input type="hidden" name="scenes" value={JSON.stringify(scenes.map((scene) => scene.trim()))} />
+    </ol>
   );
 }
 
