@@ -130,7 +130,7 @@ export function ProductDetails({ product, copy, contact, links, onRequestClose }
       <div className="flex shrink-0 items-center justify-between gap-4 border-b border-[#0a162f] bg-navy-700 px-4 pt-[14px] pb-[15px] shadow-[inset_0_2px_4px_rgb(0_0_0/0.05)] sm:px-5">
         <div className="flex min-w-0 items-center">
           {chip ? (
-            <span className="shrink-0 rounded-[4px] bg-leaf-600 px-2 py-0.5 font-display text-[10px] leading-[15px] font-extrabold tracking-[0.05em] text-white uppercase shadow-[0_1px_1px_rgb(0_0_0/0.05)]">
+            <span className="shrink-0 rounded-[4px] bg-leaf-600 px-2 py-0.5 font-display text-[10px] leading-[15px] font-extrabold tracking-[0.05em] text-white uppercase shadow-[0_1px_1px_rgb(0_0_0/0.05)] max-md:text-[12px]">
               {chip}
             </span>
           ) : null}
@@ -180,11 +180,11 @@ export function ProductDetails({ product, copy, contact, links, onRequestClose }
                     key={index}
                     className="flex min-w-0 flex-1 flex-col items-center justify-center rounded-[6px] border border-blue-100 bg-blue-50/60 px-[7px] py-[9px] text-center"
                   >
-                    <span className="font-display text-[10px] leading-[15px] font-bold tracking-[-0.025em] text-slate-900 uppercase">
+                    <span className="font-display text-[10px] leading-[15px] font-bold tracking-[-0.025em] text-slate-900 uppercase max-md:text-[12px]">
                       {badge.title}
                     </span>
                     {badge.subtitle ? (
-                      <span className="mt-0.5 font-display text-[9px] leading-[11.25px] font-medium text-slate-500">
+                      <span className="mt-0.5 font-display text-[9px] leading-[11.25px] font-medium text-slate-500 max-md:text-[12px] max-md:leading-4">
                         {badge.subtitle}
                       </span>
                     ) : null}
@@ -196,7 +196,7 @@ export function ProductDetails({ product, copy, contact, links, onRequestClose }
 
           <div className="min-w-0 md:col-span-7">
             {product.typeLabel ? (
-              <p className="font-display text-[11px] leading-[16.5px] font-extrabold tracking-[0.05em] text-leaf-600 uppercase">
+              <p className="font-display text-[11px] leading-[16.5px] font-extrabold tracking-[0.05em] text-leaf-600 uppercase max-md:text-[12px]">
                 {product.typeLabel}
               </p>
             ) : null}
@@ -232,7 +232,7 @@ export function ProductDetails({ product, copy, contact, links, onRequestClose }
               <section aria-labelledby="product-specs-title" className="mt-[17px]">
                 <h3
                   id="product-specs-title"
-                  className="font-display text-[11px] leading-[16.5px] font-bold tracking-[0.05em] text-slate-900 uppercase"
+                  className="font-display text-[11px] leading-[16.5px] font-bold tracking-[0.05em] text-slate-900 uppercase max-md:text-[12px]"
                 >
                   Technical specification breakdown
                 </h3>
@@ -271,7 +271,7 @@ export function ProductDetails({ product, copy, contact, links, onRequestClose }
                   </span>
                 </a>
                 {copy.datasheetNote ? (
-                  <p className="font-display text-[11px] leading-[16.5px] font-medium text-amber-800/80">
+                  <p className="font-display text-[11px] leading-[16.5px] font-medium text-amber-800/80 max-md:text-[12px]">
                     {copy.datasheetNote}
                   </p>
                 ) : null}

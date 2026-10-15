@@ -1,4 +1,4 @@
-import { frameUrl, heroFilm, heroHotspots, heroHotspotTiming, heroScrollCue, type HeroFilmSet } from "@/content/hero";
+import { frameUrl, heroFilm, heroScrollCue, type HeroFilmSet } from "@/content/hero";
 import { sceneAt } from "@/content/hero-scenes";
 
 import { FramePlayer, type FrameSource } from "./frame-player";
@@ -8,11 +8,11 @@ export interface HeroElements {
   section: HTMLElement;
   canvas: HTMLCanvasElement;
   loader: HTMLElement | null;
+  /** The "Scroll to explore" text, re-scrambled at every scene change. */
   cue: HTMLElement | null;
   /** Corner cards: they fade out as the film ends (the brand row stays). */
   cards: HTMLElement[];
   scenes: HTMLElement[];
-  hotspots: HTMLElement[];
 }
 
 /** Loader timing: never flash it, never keep visitors waiting on a slow connection. */
@@ -41,8 +41,8 @@ interface ConnectionInfo {
 
 /**
  * Drives the hero film: maps the section's scroll position to a frame and a caption scene,
- * moves the hotspot labels, fades the bottom cards out at the end and runs the "charging"
- * loader while the opening frames load. Returns a cleanup function.
+ * fades the bottom cards out at the end and runs the "charging" loader while the opening
+ * frames load. Returns a cleanup function.
  */
 export function startHeroFilm(el: HeroElements): () => void {
   const cleanups: (() => void)[] = [];
@@ -81,20 +81,16 @@ export function startHeroFilm(el: HeroElements): () => void {
   /* ------------------------------------------------------------ geometry */
   const mobileQuery = window.matchMedia(`(max-width: ${heroFilm.mobileMaxWidth}px)`);
   let scroll = mobileQuery.matches ? heroFilm.mobile : heroFilm.desktop;
-  let stageWidth = 0;
-  let stageHeight = 0;
 
   const measure = () => {
     const box = el.canvas.getBoundingClientRect();
-    stageWidth = box.width;
-    stageHeight = box.height;
     scroll = mobileQuery.matches ? heroFilm.mobile : heroFilm.desktop;
     const wantTall = prefersTall();
     if (wantTall !== tall) {
       tall = wantTall;
       player.setSource(sourceFor(tall ? heroFilm.tall : heroFilm.wide));
     }
-    player.resize(stageWidth, stageHeight, Math.min(window.devicePixelRatio || 1, 2));
+    player.resize(box.width, box.height, Math.min(window.devicePixelRatio || 1, 2));
     schedule();
   };
   const resizeObserver = new ResizeObserver(measure);
@@ -114,38 +110,13 @@ export function startHeroFilm(el: HeroElements): () => void {
       // The opening line is the page's <h1>: it stays available to assistive tech throughout.
       if (index > 0) node.setAttribute("aria-hidden", String(index !== next));
     });
-    const active = el.scenes[next];
-    if (el.cue && active) {
-      el.cue.style.setProperty("--cue-offset", `${active.offsetHeight / 2 + 22}px`);
-      if (!first) {
-        stopScramble?.();
-        stopScramble = scrambleText(el.cue, heroScrollCue);
-      }
+    if (el.cue && !first) {
+      stopScramble?.();
+      stopScramble = scrambleText(el.cue, heroScrollCue);
     }
   };
 
-  /* ------------------------------------------------------------ hotspots & cards */
-  let hotspotsShown = false;
-  const updateHotspots = (progress: number) => {
-    const { start, peak, end, drift } = heroHotspotTiming;
-    const inWindow = !tall && progress > start && progress < end;
-    if (!inWindow) {
-      if (hotspotsShown) el.hotspots.forEach((node) => (node.style.opacity = "0"));
-      hotspotsShown = false;
-      return;
-    }
-    hotspotsShown = true;
-    const distance = Math.abs(progress - peak) / (peak - start);
-    el.hotspots.forEach((node, index) => {
-      const spot = heroHotspots[index];
-      if (!spot) return;
-      const { x, y } = player.project(spot.x, spot.y + drift * distance);
-      const fits = x > 8 && x + node.offsetWidth < stageWidth - 8 && y > 70 && y < stageHeight - 140;
-      node.style.opacity = fits ? String(clamp01(1 - distance)) : "0";
-      node.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
-    });
-  };
-
+  /* ------------------------------------------------------------ cards */
   let cardsHidden = false;
   let cardsOpacity = -1;
   const updateCards = (progress: number) => {
@@ -175,7 +146,6 @@ export function startHeroFilm(el: HeroElements): () => void {
     }
     const nextScene = sceneAt(progress);
     if (nextScene !== scene) showScene(nextScene);
-    updateHotspots(progress);
     updateCards(progress);
     if (process.env.NODE_ENV !== "production") {
       // Development-only probe for automated checks (stripped from production builds).
@@ -191,52 +161,6 @@ export function startHeroFilm(el: HeroElements): () => void {
     cancelAnimationFrame(raf);
   });
   measure();
-
-  /* ------------------------------------------------------------ cursor-following cue */
-  // With a mouse, "Scroll to explore" trails the pointer (a short distance below it); on touch
-  // screens it stays under the caption.
-  if (el.cue && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
-    const cue = el.cue;
-    const target = { x: 0, y: 0 };
-    const current = { x: 0, y: 0 };
-    let following = false;
-    let followRaf = 0;
-    let last = 0;
-    const step = (now: number) => {
-      const dt = Math.min(64, now - last) / 1000;
-      last = now;
-      const ease = 1 - Math.exp(-dt * 14);
-      current.x += (target.x - current.x) * ease;
-      current.y += (target.y - current.y) * ease;
-      cue.style.transform = `translate(${current.x.toFixed(1)}px, ${current.y.toFixed(1)}px)`;
-      const settled = Math.abs(target.x - current.x) < 0.3 && Math.abs(target.y - current.y) < 0.3;
-      followRaf = settled ? 0 : requestAnimationFrame(step);
-    };
-    const onPointerMove = (event: PointerEvent) => {
-      if (event.pointerType !== "mouse") return;
-      const stage = el.canvas.getBoundingClientRect();
-      if (stage.bottom <= 0) return;
-      target.x = event.clientX - stage.left;
-      target.y = event.clientY - stage.top + 28;
-      if (!following) {
-        following = true;
-        current.x = target.x;
-        current.y = target.y;
-        cue.setAttribute("data-follow", "");
-      }
-      if (!followRaf) {
-        last = performance.now();
-        followRaf = requestAnimationFrame(step);
-      }
-    };
-    window.addEventListener("pointermove", onPointerMove, { passive: true });
-    cleanups.push(() => {
-      window.removeEventListener("pointermove", onPointerMove);
-      cancelAnimationFrame(followRaf);
-      cue.removeAttribute("data-follow");
-      cue.style.transform = "";
-    });
-  }
 
   /* ------------------------------------------------------------ loader */
   const loader = el.loader;

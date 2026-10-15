@@ -5,8 +5,9 @@
 export const siteForms = {
   contact: {
     name: "Contact form",
-    location: "Homepage → “Let’s Build a Brighter Future Together” section",
-    description: "General enquiries: name, email, phone and message.",
+    location: "Homepage and product pages → “Let’s power your next step.” section",
+    description:
+      "Name, phone, what they’re interested in and a message. The visitor then sends it to you on WhatsApp; this copy is kept in case they don’t.",
   },
   "product-rfq": {
     name: "Product enquiry / RFQ",

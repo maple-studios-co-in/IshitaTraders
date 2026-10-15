@@ -56,7 +56,6 @@ export class FramePlayer {
   private painted = -1;
   private direction = 1;
   private crop = { sx: 0, sy: 0, sw: 0, sh: 0 };
-  private box = { width: 0, height: 0 };
   private onLoadProgress: (() => void) | null = null;
   private destroyed = false;
 
@@ -79,7 +78,6 @@ export class FramePlayer {
     const sw = wider ? fw : fh * viewAspect;
     const sh = wider ? fw / viewAspect : fh;
     this.crop = { sx: (fw - sw) / 2, sy: (fh - sh) / 2, sw, sh };
-    this.box = { width: cssWidth, height: cssHeight };
     const scale = Math.min(devicePixelRatio, sw / cssWidth);
     const width = Math.max(1, Math.round(cssWidth * scale));
     const height = Math.max(1, Math.round(cssHeight * scale));
@@ -90,12 +88,6 @@ export class FramePlayer {
       this.ctx.imageSmoothingQuality = "high";
     }
     if (this.painted >= 0) this.draw(this.painted);
-  }
-
-  /** Maps a point in source-frame pixels to CSS pixels inside the canvas box. */
-  project(x: number, y: number) {
-    const { sx, sy, sw, sh } = this.crop;
-    return { x: ((x - sx) / sw) * this.box.width, y: ((y - sy) / sh) * this.box.height };
   }
 
   /** Swap to another cut of the same film (e.g. portrait frames after a rotation). */
