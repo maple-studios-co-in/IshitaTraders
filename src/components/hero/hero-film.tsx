@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, type CSSProperties, type Ref } from "react";
 
 import logoMark from "@/assets/images/brand/logo-mark.png";
-import { ArrowIcon } from "@/components/home/icons";
+import { ArrowIcon } from "@/components/layout/line-icons";
 import { sectionIds } from "@/config/navigation";
 import { frameUrl, heroCards, heroCredit, heroFilm, heroScrollCue, type HeroCard } from "@/content/hero";
 import { heroSceneSizes } from "@/content/hero-scenes";

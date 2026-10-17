@@ -18,6 +18,12 @@ const optionalUrl = z
   .trim()
   .max(500)
   .refine((value) => value === "" || /^https?:\/\/\S+$/i.test(value), "Enter a full URL starting with https://");
+/** A video's running time as shown on its thumbnail ("03:48", "1:02:15"); empty hides the label. */
+const videoLength = z
+  .string()
+  .trim()
+  .max(8)
+  .refine((value) => value === "" || /^\d{1,2}(:\d{2}){1,2}$/.test(value), "Use minutes and seconds, like 03:48.");
 
 export const imageRefSchema = z.union([
   z.object({ kind: z.literal("static"), key: z.string().min(1), alt: line(200) }),
@@ -145,6 +151,15 @@ export const catalogueSchema = z.object({
 
 export const homepageSchema = z.object({
   solarTourVideoUrl: optionalUrl,
+  /** Our Clients page: the large featured video and the three "Video Stories" cards, each with its length. */
+  clientStoryVideoUrl: optionalUrl,
+  clientStoryVideoLength: videoLength,
+  clientVideo1Url: optionalUrl,
+  clientVideo1Length: videoLength,
+  clientVideo2Url: optionalUrl,
+  clientVideo2Length: videoLength,
+  clientVideo3Url: optionalUrl,
+  clientVideo3Length: videoLength,
 });
 
 export const settingsSchemas = {
@@ -168,11 +183,11 @@ export const settingsKeys = Object.keys(settingsSchemas) as SettingsKey[];
 export const defaultSettings: SiteSettings = {
   business: {
     name: siteConfig.name,
-    tagline: "Reliable Power. Smarter Solar.",
+    tagline: "Battery | Inverter | Solar",
     foundedYear: siteConfig.foundedYear,
     footerBlurb:
       "Distributor and turnkey power solutions provider, serving primarily Champaran and across Bihar since 2014.",
-    copyright: "© {year} Ishita Traders.",
+    copyright: "© Ishita Traders. All Rights Reserved. Estd. 2014, Chakia, East Champaran, Bihar.",
     director: {
       honorific: siteConfig.director.honorific,
       name: siteConfig.director.name,
@@ -241,7 +256,17 @@ export const defaultSettings: SiteSettings = {
     rfqSubtitle: "Submit project details directly to Ishita Traders’ commercial sales desk.",
     datasheetNote: "Includes CAD drawings & pinout",
   },
-  homepage: { solarTourVideoUrl: siteConfig.solarTourVideoUrl ?? "" },
+  homepage: {
+    solarTourVideoUrl: siteConfig.solarTourVideoUrl ?? "",
+    clientStoryVideoUrl: "",
+    clientStoryVideoLength: "",
+    clientVideo1Url: "",
+    clientVideo1Length: "",
+    clientVideo2Url: "",
+    clientVideo2Length: "",
+    clientVideo3Url: "",
+    clientVideo3Length: "",
+  },
 };
 
 /** Merges a stored (possibly partial or outdated) section over its defaults, one level deep. */

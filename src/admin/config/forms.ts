@@ -5,9 +5,13 @@
 export const siteForms = {
   contact: {
     name: "Contact form",
-    location: "Homepage and product pages → “Let’s power your next step.” section",
-    description:
-      "Name, phone, what they’re interested in and a message. The visitor then sends it to you on WhatsApp; this copy is kept in case they don’t.",
+    location: "Homepage → “Let’s Build a Brighter Future Together” section",
+    description: "General enquiries: name, email, phone and message.",
+  },
+  "contact-page": {
+    name: "Contact page enquiry",
+    location: "Contact page → “Send Us an Enquiry”",
+    description: "Name, phone, optional email, the enquiry type (solar, battery, inverter/UPS…) and a message.",
   },
   "product-rfq": {
     name: "Product enquiry / RFQ",

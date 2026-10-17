@@ -6,14 +6,13 @@ import { imageUrl, resolveImage } from "@/admin/content/images";
 import type { PublicProduct } from "@/admin/content/public-types";
 import { getSiteSettings } from "@/admin/content/settings";
 import type { StockStatus } from "@/admin/content/types";
-import { ContactSection } from "@/components/home/contact-section";
-import { Questions } from "@/components/home/questions";
-import { SiteFooter } from "@/components/layout/site-footer";
+import { FinalCta, SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { CatalogueBanner } from "@/components/products/catalogue-banner";
 import { catalogueApplications, toCatalogueBrands, toCatalogueProduct } from "@/components/products/catalogue-data";
 import { ProductCatalogue, ProductCatalogueFallback } from "@/components/products/product-catalogue";
 import type { CatalogueProps } from "@/components/products/types";
+import { Faq } from "@/components/sections/faq";
 import { siteConfig } from "@/config/site";
 
 /** Rebuilt hourly at most; admin changes to products or settings refresh it immediately (cache tags). */
@@ -138,10 +137,8 @@ export default async function ProductsPage() {
         <Suspense fallback={<ProductCatalogueFallback {...catalogue} />}>
           <ProductCatalogue {...catalogue} />
         </Suspense>
-        <div className="font-archivo">
-          <Questions />
-          <ContactSection />
-        </div>
+        <Faq />
+        <FinalCta onHomepage={false} />
       </main>
       <SiteFooter onHomepage={false} />
     </>

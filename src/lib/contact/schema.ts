@@ -2,14 +2,56 @@ import "server-only";
 
 import { z } from "zod";
 
-import { enquiryLimits, INDIAN_MOBILE, normalizePhone } from "./types";
+import { enquiryTypes, type EnquiryType } from "@/content/contact-page";
 
-/** The homepage enquiry ("Let’s power your next step."): what the visitor also sends on WhatsApp. */
+import type { ContactField } from "./types";
+
+const INDIAN_MOBILE = /^(?:\+?91|0)?[6-9]\d{9}$/;
+
+export const contactSchema = z.object({
+  firstName: z.string().trim().min(1, "Please enter your first name.").max(60, "That name is too long."),
+  lastName: z.string().trim().max(60, "That name is too long."),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(254, "That email address is too long.")
+    .pipe(z.email("Please enter a valid email address.")),
+  phone: z
+    .string()
+    .trim()
+    .transform((value) => value.replace(/[\s()-]/g, ""))
+    .pipe(z.string().regex(INDIAN_MOBILE, "Please enter a valid 10-digit mobile number.")),
+  message: z
+    .string()
+    .trim()
+    .min(10, "Please tell us a little more (at least 10 characters).")
+    .max(2000, "Please keep your message under 2000 characters."),
+}) satisfies z.ZodType<Record<ContactField, string>>;
+
+export type ContactMessage = z.infer<typeof contactSchema>;
+
 export const enquirySchema = z.object({
-  name: z.string().trim().min(2).max(enquiryLimits.name),
-  phone: z.string().transform(normalizePhone).pipe(z.string().regex(INDIAN_MOBILE)),
-  interest: z.string().trim().max(enquiryLimits.interest),
-  message: z.string().trim().max(enquiryLimits.message),
+  name: z.string().trim().min(1, "Please enter your name.").max(80, "That name is too long."),
+  phone: z
+    .string()
+    .trim()
+    .transform((value) => value.replace(/[\s()-]/g, ""))
+    .pipe(z.string().regex(INDIAN_MOBILE, "Please enter a valid 10-digit mobile number.")),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(254, "That email address is too long.")
+    .refine((value) => value === "" || z.email().safeParse(value).success, "Please enter a valid email address."),
+  type: z.enum(enquiryTypes.map((item) => item.value) as [EnquiryType, ...EnquiryType[]], {
+    error: "Please choose what your enquiry is about.",
+  }),
+  message: z
+    .string()
+    .trim()
+    .min(10, "Please tell us a little more (at least 10 characters).")
+    .max(2000, "Please keep your message under 2000 characters."),
 });
 
-export type Enquiry = z.infer<typeof enquirySchema>;
+export type EnquiryMessage = z.infer<typeof enquirySchema>;

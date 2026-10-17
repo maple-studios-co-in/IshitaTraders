@@ -18,7 +18,7 @@ const loadSettings = unstable_cache(
     return Object.fromEntries(settingsKeys.map((key) => [key, mergeSection(key, stored.get(key))])) as SiteSettings;
   },
   // Bump the version whenever a section's shape or defaults change, so nothing stale is served.
-  ["site-settings:v3"],
+  ["site-settings:v4"],
   { tags: [cacheTags.settings], revalidate: 3600 },
 );
 
