@@ -9,8 +9,7 @@ import { imageUrl, resolveImage } from "@/admin/content/images";
 import type { PublicProduct } from "@/admin/content/public-types";
 import { getSiteSettings } from "@/admin/content/settings";
 import type { StockStatus } from "@/admin/content/types";
-import { ContactSection } from "@/components/home/contact-section";
-import { SiteFooter } from "@/components/layout/site-footer";
+import { FinalCta, SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { toCatalogueProduct } from "@/components/products/catalogue-data";
 import { productHref } from "@/components/products/product-card";
@@ -159,7 +158,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     <>
       <ProductStructuredData product={product} businessName={settings.business.name} />
       <SiteHeader contact={settings.contact} businessName={settings.business.name} />
-      <main id="main-content" tabIndex={-1} data-page-content className="bg-section-fade outline-none">
+      <main id="main-content" tabIndex={-1} data-page-content className="bg-section-fade pb-16 outline-none">
         <div className="container-site max-w-[1040px] pt-8 lg:pt-12">
           <nav aria-label="Breadcrumb" className="mb-4">
             <ol className="flex flex-wrap items-center gap-1.5 text-sm text-slate-500">
@@ -256,7 +255,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </p>
         </div>
         <div className="mt-16">
-          <ContactSection />
+          <FinalCta onHomepage={false} />
         </div>
       </main>
       <SiteFooter onHomepage={false} />

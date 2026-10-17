@@ -1,4 +1,4 @@
-import { anchor, sectionIds } from "@/config/navigation";
+import { anchor, productLinks, sectionIds } from "@/config/navigation";
 
 /**
  * The homepage hero: a scroll-scrubbed film (Figma "Hero storyboard · scroll milestones") with
@@ -46,8 +46,8 @@ export interface HeroCard {
 
 /** The two white corner cards on the film (Figma "Hero / Corner action"). */
 export const heroCards = {
-  savings: { lines: ["Explore", "your savings"], href: anchor(sectionIds.calculator) },
-  products: { lines: ["Explore", "our products"], href: anchor(sectionIds.products) },
+  savings: { lines: ["Explore", "your savings"], href: anchor(sectionIds.solar) },
+  products: { lines: ["Explore", "our products"], href: productLinks.all },
 } satisfies Record<string, HeroCard>;
 
 /** The film is a visualisation, not Ishita's premises — keep this credit visible. */

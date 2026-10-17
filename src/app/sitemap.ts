@@ -6,9 +6,10 @@ import { getSiteSettings } from "@/admin/content/settings";
 import { siteConfig } from "@/config/site";
 
 /**
- * The home page, the catalogue, every published product page and every published HTML page that may be indexed. Cached and
- * rebuilt whenever pages or settings change (their cache tags). With indexing switched off in
- * Admin → SEO, only the home page is listed.
+ * The home page, the site's own pages (catalogue, brands, clients, contact), every published
+ * product page and every published HTML page that may be indexed. Cached and rebuilt whenever
+ * pages or settings change (their cache tags). With indexing switched off in Admin → SEO, only the
+ * home page is listed.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [{ seo }, routing, catalog] = await Promise.all([getSiteSettings(), getRoutingTable(), getCatalog()]);
@@ -31,5 +32,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  return [home, { url: `${siteConfig.url}/products`, changeFrequency: "weekly", priority: 0.9 }, ...products, ...pages];
+  const sitePages: MetadataRoute.Sitemap = [
+    { url: `${siteConfig.url}/products`, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${siteConfig.url}/brands`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${siteConfig.url}/clients`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${siteConfig.url}/contact`, changeFrequency: "yearly", priority: 0.7 },
+  ];
+
+  return [home, ...sitePages, ...products, ...pages];
 }

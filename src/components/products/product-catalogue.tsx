@@ -10,6 +10,7 @@ import { contactLinks } from "@/admin/content/links";
 import { CloseIcon } from "@/components/icons";
 import { Reveal } from "@/components/motion/reveal";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { CATALOGUE_NAVIGATE_EVENT } from "@/lib/catalogue-navigation";
 import { cn } from "@/lib/cn";
 
 import { SearchIcon } from "./icons";
@@ -150,6 +151,25 @@ function CatalogueBrowser({
       `${window.location.pathname}${next ? `?${next}` : ""}${window.location.hash}`,
     );
   }, [syncUrl, filters.brand, filters.app, filters.categories, filters.product, urlQuery]);
+
+  // Products menu links clicked while the catalogue is open hand their query over here (see
+  // lib/catalogue-navigation); Back and Forward through the entries they add re-read the address.
+  useEffect(() => {
+    if (!syncUrl) return;
+    const apply = (query: string) => {
+      const next = readFilters(query, { products, brands, applications });
+      setFilters(next);
+      setUrlQuery(next.q);
+    };
+    const onNavigate = (event: Event) => apply((event as CustomEvent<string>).detail);
+    const onPopState = () => apply(window.location.search);
+    window.addEventListener(CATALOGUE_NAVIGATE_EVENT, onNavigate);
+    window.addEventListener("popstate", onPopState);
+    return () => {
+      window.removeEventListener(CATALOGUE_NAVIGATE_EVENT, onNavigate);
+      window.removeEventListener("popstate", onPopState);
+    };
+  }, [syncUrl, products, brands, applications]);
 
   const update = (patch: Partial<Filters>) => {
     setFilters((current) => ({ ...current, ...patch }));

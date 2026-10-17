@@ -161,7 +161,7 @@ export function BusinessForm({ values, isCustomised }: { values: SiteSettings["b
           label="Tagline"
           defaultValue={values.tagline}
           maxLength={80}
-          hint="The footer’s last line, after the copyright."
+          hint="Under the logo in the footer."
         />
         <TextField name="foundedYear" label="Established (year)" defaultValue={values.foundedYear} type="number" />
         <TextField
@@ -178,7 +178,7 @@ export function BusinessForm({ values, isCustomised }: { values: SiteSettings["b
         defaultValue={values.footerBlurb}
         multiline
         maxLength={400}
-        hint="Not shown in the current website design."
+        hint="Under the tagline in the footer."
       />
       <TextField
         name="copyright"
@@ -603,6 +603,37 @@ export function HomepageForm({ values, isCustomised }: { values: SiteSettings["h
           Open the current video <ExternalLink className="size-3" aria-hidden="true" />
         </a>
       ) : null}
+      <SubHeading>Our Clients page videos</SubHeading>
+      <p className="text-xs text-slate-500">
+        A card without a link shows as a plain photo. The length (like 03:48) is printed on the thumbnail; leave it
+        empty to hide it.
+      </p>
+      {(
+        [
+          ["clientStoryVideo", "Featured client story (“Hear It From Our Clients”)"],
+          ["clientVideo1", "Home Solar Installation Experience"],
+          ["clientVideo2", "Petrol Pump Power Solution"],
+          ["clientVideo3", "Institutional Solar Setup"],
+        ] as const
+      ).map(([key, label]) => (
+        <FormGrid key={key} className="sm:grid-cols-[minmax(0,1fr)_8rem]">
+          <TextField
+            name={`${key}Url`}
+            label={label}
+            defaultValue={values[`${key}Url`]}
+            type="url"
+            maxLength={500}
+            placeholder="https://www.youtube.com/watch?v=…"
+          />
+          <TextField
+            name={`${key}Length`}
+            label="Length"
+            defaultValue={values[`${key}Length`]}
+            maxLength={8}
+            placeholder="03:48"
+          />
+        </FormGrid>
+      ))}
     </SettingsForm>
   );
 }

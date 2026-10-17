@@ -1,7 +1,7 @@
 "use client";
 
 import { m, type Variants } from "motion/react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 const VIEWPORT = { once: true, margin: "0px 0px -12% 0px" } as const;
@@ -73,14 +73,16 @@ export function RevealItem({
   children,
   className,
   as = "div",
+  style,
 }: {
   children: ReactNode;
   className?: string;
   as?: RevealElement;
+  style?: CSSProperties;
 }) {
   const Component = elements[as] as typeof m.div;
   return (
-    <Component className={className} variants={itemVariants}>
+    <Component className={className} style={style} variants={itemVariants}>
       {children}
     </Component>
   );

@@ -1,11 +1,31 @@
-/** Client-safe enquiry form rules, shared by the form and the server action (no validation library in the browser bundle). */
-export const enquiryLimits = { name: 80, phone: 20, interest: 80, message: 1500 } as const;
+/** Client-safe contact form types (no validation library in the browser bundle). */
+export const contactFields = ["firstName", "lastName", "email", "phone", "message"] as const;
 
-/** Indian mobile numbers, with or without +91 / 0 in front. */
-export const INDIAN_MOBILE = /^(?:\+?91|0)?[6-9]\d{9}$/;
+export type ContactField = (typeof contactFields)[number];
 
-/** Spaces, brackets and dashes people type inside phone numbers. */
-export const normalizePhone = (value: string) => value.trim().replace(/[\s()-]/g, "");
+export interface ContactFormState {
+  status: "idle" | "success" | "error";
+  message?: string;
+  fieldErrors?: Partial<Record<ContactField, string>>;
+  /** Echoed back so the form keeps the visitor's input after a failed submission. */
+  values?: Partial<Record<ContactField, string>>;
+}
+
+export const initialContactState: ContactFormState = { status: "idle" };
 
 /** Hidden honeypot input name; real visitors never fill it. */
 export const HONEYPOT_FIELD = "company_website";
+
+/** The contact page's "Send Us an Enquiry" form. */
+export const enquiryFields = ["name", "phone", "email", "type", "message"] as const;
+
+export type EnquiryField = (typeof enquiryFields)[number];
+
+export interface EnquiryFormState {
+  status: "idle" | "success" | "error";
+  message?: string;
+  fieldErrors?: Partial<Record<EnquiryField, string>>;
+  values?: Partial<Record<EnquiryField, string>>;
+}
+
+export const initialEnquiryState: EnquiryFormState = { status: "idle" };

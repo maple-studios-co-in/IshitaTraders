@@ -14,6 +14,9 @@ const reserved = [
   "api",
   "media",
   "products",
+  "brands",
+  "clients",
+  "contact",
   "not-found-document",
   // Framework internals and metadata files (`src/app/*.ts`, `public/`)
   "_next",
@@ -64,7 +67,7 @@ const reserved = [
 export const RESERVED_SLUGS: ReadonlySet<string> = new Set(reserved);
 
 /** Public website routes that always exist (they're in the sitemap; nothing may shadow them). */
-export const SITE_ROUTES = ["/", "/products"] as const;
+export const SITE_ROUTES = ["/", "/products", "/brands", "/clients", "/contact"] as const;
 
 /**
  * Whether a page slug is taken by the website. Slugs starting with "admin" are refused too:

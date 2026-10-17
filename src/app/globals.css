@@ -5,7 +5,11 @@
 @theme inline {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-jakarta), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-outfit: var(--font-outfit-face), var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-jost: var(--font-jost-face), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-archivo: var(--font-archivo-face), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-hanken: var(--font-hanken-face), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-jetbrains: var(--font-jetbrains-face), ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 }
 
 /* Design tokens taken from the Ishita Traders Figma file. */
@@ -56,15 +60,69 @@
 
   --shadow-card: 0 1px 1px rgb(0 0 0 / 0.05);
   --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.05);
+  --shadow-float: 0 25px 31px -6px rgb(0 0 0 / 0.1), 0 10px 12px -7px rgb(0 0 0 / 0.1);
+  --shadow-panel: 0 12px 18px -4px rgb(0 0 0 / 0.1), 0 5px 7px -5px rgb(0 0 0 / 0.1);
+  --shadow-faq: 0 11px 33px -5.5px rgb(16 24 40 / 0.06), 0 2.75px 8.3px -2.75px rgb(16 24 40 / 0.04);
+  /* Hover shadow of `lift-card`; drawn inside the 110% scale, so it lands as 0 40px 68px 8px on screen. */
+  --shadow-lift: 0 36px 62px 7px rgb(0 0 0 / 0.14);
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Critically damped spring (stiffness ~650, damping ~51) sampled over 300ms. */
+  --ease-lift-in: linear(
+    0,
+    0.0169 2.57%,
+    0.0758 5.9%,
+    0.2155 11.33%,
+    0.4681 20.63%,
+    0.6128 27.07%,
+    0.7263 33.57%,
+    0.8172 40.7%,
+    0.8882 49%,
+    0.9412 59.43%,
+    0.977 74.13%,
+    1
+  );
+  --ease-lift-out: cubic-bezier(0, 0, 0.58, 1);
+
+  --animate-hero-zoom: hero-zoom 16s var(--ease-out-expo) both;
+  --animate-rise: rise 0.9s var(--ease-out-expo) both;
+  --animate-pulse-ring: pulse-ring 2.4s ease-out infinite;
+
+  @keyframes hero-zoom {
+    from {
+      transform: scale(1.08);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulse-ring {
+    0% {
+      transform: scale(1);
+      opacity: 0.55;
+    }
+    100% {
+      transform: scale(1.6);
+      opacity: 0;
+    }
+  }
 }
 
 :root {
-  /* The floating navigation: 17 px from the top, then the 66–68 px wordmark pill. */
+  /* The floating pill navigation: 17 px from the top, then the 66–68 px wordmark pill. */
   --header-h: 84px;
-  /* Homepage band padding (Figma: 24 px on the 390 px frame, 88 px on the 1440 px frame). */
-  --band-pad: clamp(24px, calc(24px + 64 * (100vw - 390px) / 1050), 88px);
   color-scheme: light;
 }
 
@@ -122,9 +180,37 @@
 }
 
 /*
- * Cinematic scroll reveal: a picture settles from a slow push-in as it enters the screen.
- * Scroll-driven, so it costs no script; browsers without scroll timelines (and reduced motion)
- * simply show it in place.
+ * Phone layouts (applied with `max-md:`): a list becomes a full-bleed swipe rail that snaps card by
+ * card, with the next card peeking in as the cue. Pair it with <RailProgress /> right after the list.
+ */
+@utility mobile-rail {
+  /* Positioned, so absolutely placed bits inside the cards (e.g. sr-only headings) clip with it. */
+  position: relative;
+  display: flex;
+  gap: 0.875rem;
+  margin-inline: calc(-1 * var(--gutter, 1.25rem));
+  padding-inline: var(--gutter, 1.25rem);
+  padding-block: 0.5rem 1rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--gutter, 1.25rem);
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  & > * {
+    flex: 0 0 var(--rail-item, min(84%, 22rem));
+    scroll-snap-align: start;
+  }
+}
+
+/*
+ * Cinematic scroll reveals for phones (`max-md:cine-*`): pictures settle from a slow push-in and
+ * panels rise as they enter the screen. Scroll-driven, so they cost no script; browsers without
+ * scroll timelines (and reduced motion) simply show everything in place.
  */
 @utility cine-zoom {
   @supports (animation-timeline: view()) {
@@ -136,9 +222,19 @@
   }
 }
 
+@utility cine-wipe {
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      animation: cine-wipe linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 40%;
+    }
+  }
+}
+
 @keyframes cine-zoom {
   from {
-    scale: 1.12;
+    scale: 1.22;
   }
 
   to {
@@ -146,12 +242,84 @@
   }
 }
 
+@keyframes cine-wipe {
+  from {
+    clip-path: inset(14% 7% 0 7% round 1.5rem);
+  }
+
+  to {
+    clip-path: inset(0 0 0 0 round 0);
+  }
+}
+
+@utility section-y {
+  padding-block: 4rem;
+
+  @media (width >= 64rem) {
+    padding-block: 5.5rem;
+  }
+}
+
 @utility bg-section-fade {
   background-image: linear-gradient(178deg, #ffffff 15.742%, #f3f9ff 65.31%);
 }
 
+@utility bg-brand-sweep {
+  background-image: linear-gradient(90deg, #1e3a8a 0%, #2862bf 100%);
+}
+
 @utility text-balance-safe {
   text-wrap: balance;
+}
+
+/*
+ * Hover "lift", matched frame by frame to the reference recording: the card zooms to 110% and
+ * rises 10px on a fast spring (~300ms) while a soft shadow fades in, then settles back in ~110ms.
+ * Put `lift-trigger` on a wrapper that stays still: the hover then holds across the card's
+ * resting footprint, so the moving card can never flicker under the cursor. Keyboard focus
+ * inside the card lifts it as well.
+ */
+@utility lift-card {
+  --lift: 0;
+  --lift-duration: 110ms;
+  --lift-ease: var(--ease-lift-out);
+
+  position: relative;
+  translate: 0 calc(var(--lift) * -10px);
+  scale: calc(1 + var(--lift) * 0.1);
+  transition-property: translate, scale;
+  transition-duration: var(--lift-duration);
+  transition-timing-function: var(--lift-ease);
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: var(--shadow-lift);
+    opacity: var(--lift);
+    pointer-events: none;
+    transition: opacity var(--lift-duration) var(--lift-ease);
+  }
+
+  @media (hover: hover) {
+    :where(.lift-trigger:hover) & {
+      --lift: 1;
+      --lift-duration: 300ms;
+      --lift-ease: var(--ease-lift-in);
+    }
+  }
+
+  :where(.lift-trigger:has(:focus-visible)) & {
+    --lift: 1;
+    --lift-duration: 300ms;
+    --lift-ease: var(--ease-lift-in);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    translate: none;
+    scale: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -367,193 +535,31 @@
   }
 }
 
-/* ------------------------------------------------------------------ Ishita website design
- * Figma coBLUmSDJE5yrXgsWcbpCF ("Website · Desktop, Mobile & Hero"). Sizes run fluidly from the mobile
- * frame (390 px wide) to the desktop frame (1440 px) and stop there. Display type tracks at -2.5%.
- */
-@utility type-fact {
-  font-size: clamp(20px, calc(20px + 5 * (100vw - 390px) / 1050), 25px);
-  line-height: clamp(28px, calc(30px - 2 * (100vw - 390px) / 1050), 30px);
-  letter-spacing: clamp(-0.625px, calc(-0.625 * (100vw - 390px) / 1050), 0px);
-}
+/* Phones: the quick-contact dock rises after the first screen (src/components/layout/mobile-dock.tsx). */
+.mobile-dock {
+  translate: 0 calc(100% + 1.5rem);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    translate 0.55s var(--ease-out-expo),
+    opacity 0.3s ease,
+    visibility 0s linear 0.55s;
 
-/* Customer quotes run the other way: 25 px / 1.12 on phones, 23 px / 1.5 in the desktop columns. */
-@utility type-quote {
-  font-size: clamp(23px, calc(25px - 2 * (100vw - 390px) / 1050), 25px);
-  line-height: clamp(28px, calc(28px + 6.5 * (100vw - 390px) / 1050), 34.5px);
-  letter-spacing: clamp(-0.625px, calc(-0.625px + 0.625 * (100vw - 390px) / 1050), 0px);
-}
-
-@utility type-label {
-  font-size: clamp(24px, calc(24px + 10 * (100vw - 390px) / 1050), 34px);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-@utility type-statement {
-  font-size: clamp(32px, calc(32px + 14 * (100vw - 390px) / 1050), 46px);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-@utility type-manifesto {
-  font-size: clamp(36px, calc(36px + 32 * (100vw - 390px) / 1050), 68px);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-@utility type-calc-title {
-  font-size: clamp(35px, calc(35px + 5 * (100vw - 390px) / 1050), 40px);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-@utility type-result {
-  font-size: clamp(32px, calc(32px + 8 * (100vw - 390px) / 1050), 40px);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-@utility type-card-title {
-  font-size: clamp(25px, calc(25px + 7 * (100vw - 390px) / 1050), 32px);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-@utility type-step {
-  font-size: clamp(36px, calc(36px + 8 * (100vw - 390px) / 1050), 44px);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-@utility type-energy-title {
-  font-size: clamp(30px, calc(30px + 14 * (100vw - 390px) / 1050), 44px);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-@utility type-energy-sub {
-  font-size: clamp(26px, calc(26px + 6 * (100vw - 390px) / 1050), 32px);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-@utility type-product-title {
-  font-size: clamp(28px, calc(28px + 8 * (100vw - 390px) / 1050), 36px);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-@utility type-app-label {
-  font-size: clamp(24px, calc(24px + 4 * (100vw - 390px) / 1050), 28px);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-@utility type-director-label {
-  font-size: clamp(25px, calc(25px + 9 * (100vw - 390px) / 1050), 34px);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-@utility type-director-quote {
-  font-size: clamp(30px, calc(30px + 8 * (100vw - 390px) / 1050), 38px);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-@utility type-brands-title {
-  font-size: clamp(32px, calc(32px + 12 * (100vw - 390px) / 1050), 44px);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-@utility type-brands {
-  font-size: clamp(23px, calc(23px + 24 * (100vw - 390px) / 1050), 47px);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-@utility type-question {
-  font-size: clamp(18px, calc(18px + 5 * (100vw - 390px) / 1050), 23px);
-  line-height: 1.5;
-}
-
-@utility type-contact-title {
-  font-size: clamp(43px, calc(43px + 31 * (100vw - 390px) / 1050), 74px);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-@utility type-contact-sub {
-  font-size: clamp(26px, calc(26px + 8 * (100vw - 390px) / 1050), 34px);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-@utility type-footer-links {
-  font-size: clamp(18px, calc(18px + 6 * (100vw - 390px) / 1050), 24px);
-  line-height: 1.5;
-}
-
-@utility type-wordmark {
-  font-size: clamp(76px, calc(76px + 164 * (100vw - 390px) / 1050), 240px);
-  line-height: 1;
-  letter-spacing: -0.025em;
-}
-
-@utility type-traders {
-  font-size: clamp(14px, calc(14px + 10 * (100vw - 390px) / 1050), 24px);
-  line-height: 1.5;
-}
-
-/* A homepage band's content box: 24 px padding on phones to 88 px at 1440 px, content capped at the Figma's 1264 px. */
-@utility band {
-  width: 100%;
-  max-width: 90rem;
-  margin-inline: auto;
-  padding: var(--band-pad);
-}
-
-@utility band-x {
-  width: 100%;
-  max-width: 90rem;
-  margin-inline: auto;
-  padding-inline: var(--band-pad);
-}
-
-/* In-page links land with the section's label just below the floating navigation. */
-@utility anchor-band {
-  scroll-margin-top: max(0px, calc(var(--header-h) + 12px - var(--band-pad)));
-}
-
-/* Keyboard focus stays visible on the dark and blue bands. */
-@utility focus-on-dark {
-  & :focus-visible {
-    outline-color: white;
+  &[data-visible] {
+    translate: 0 0;
+    opacity: 1;
+    visibility: visible;
+    transition:
+      translate 0.55s var(--ease-out-expo),
+      opacity 0.3s ease,
+      visibility 0s;
   }
 }
 
+/* Navigation dropdowns (Products mega menu) settle in from just above. */
 @keyframes dropdown-in {
   from {
     opacity: 0;
     translate: 0 -6px;
-  }
-}
-
-/* Questions open smoothly where the browser can animate to the answer's height. */
-.faq-item {
-  interpolate-size: allow-keywords;
-
-  &::details-content {
-    block-size: 0;
-    overflow: hidden;
-    transition:
-      block-size 0.4s var(--ease-out-expo),
-      content-visibility 0.4s allow-discrete;
-  }
-
-  &[open]::details-content {
-    block-size: auto;
   }
 }

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { AnimatePresence, m } from "motion/react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -11,6 +11,7 @@ import {
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
@@ -19,35 +20,19 @@ import logoMark from "@/assets/images/brand/logo-mark.png";
 import { contactLinks } from "@/admin/content/links";
 import type { SiteSettings } from "@/admin/content/settings-schema";
 import { PhoneIcon, WhatsAppIcon } from "@/components/icons";
-import { ArrowIcon, CloseLineIcon, MenuLinesIcon } from "@/components/home/icons";
 import { SmartLink } from "@/components/ui/smart-link";
-import {
-  anchor,
-  contactNav,
-  mainNav,
-  navCount,
-  navHref,
-  sectionIds,
-  type NavItem,
-  type NavLink,
-  type SectionId,
-} from "@/config/navigation";
+import { anchor, contactNav, mainNav, navHref, pageLinks, sectionIds, type NavItem } from "@/config/navigation";
+import { megaMenu, megaMenuHref } from "@/content/mega-menu";
 import { useActiveSection } from "@/hooks/use-active-section";
+import { applyInOpenCatalogue } from "@/lib/catalogue-navigation";
 import { cn } from "@/lib/cn";
 import { lockScroll } from "@/lib/smooth-scroll";
 
-// Sections that light up a pill while they're being read; the rest keep the previous one lit.
-const TRACKED_SECTION_IDS: SectionId[] = [
-  sectionIds.home,
-  sectionIds.about,
-  sectionIds.calculator,
-  sectionIds.products,
-  sectionIds.customers,
-  sectionIds.applications,
-  sectionIds.director,
-  sectionIds.faq,
-  sectionIds.contact,
-];
+import { ArrowIcon, ChevronDownIcon, CloseLineIcon, MenuLinesIcon } from "./line-icons";
+import { MegaMenuPanel } from "./mega-menu";
+
+// Every homepage section takes part, so Home and About Us light up only while they're being read.
+const TRACKED_SECTION_IDS = Object.values(sectionIds);
 const MENU_ID = "site-menu";
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -56,8 +41,8 @@ type Tone = "dark" | "light";
 /**
  * The floating navigation of Figma "Hero / Opening": a wordmark pill and pill links. Over the
  * hero film (`overHero`, homepage) the pills are night blue; once the page slides over the film
- * (`[data-hero-cover]`) — and on every other page — they turn white. Below 1024 px a Menu button
- * opens the links as a sheet. "Contact us" scrolls to the contact section every page ends with.
+ * (`[data-hero-cover]`) — and on every other page — they turn white. Products opens the brand mega
+ * menu; Contact is the button at the end. Below 1024 px a Menu button opens the links as a sheet.
  */
 export function SiteHeader({
   contact,
@@ -74,7 +59,6 @@ export function SiteHeader({
   const activeSection = useActiveSection(TRACKED_SECTION_IDS);
   const [overFilm, setOverFilm] = useState(overHero);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [openGroup, setOpenGroup] = useState<string | null>(null);
   const headerRef = useRef<HTMLElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -92,33 +76,16 @@ export function SiteHeader({
     };
   }, [overHero]);
 
-  // Dropdowns close on Escape and on any click outside them.
-  useEffect(() => {
-    if (!openGroup) return;
-    const onPointerDown = (event: PointerEvent) => {
-      if (!(event.target as Element | null)?.closest?.("[data-nav-group]")) setOpenGroup(null);
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      document.querySelector<HTMLElement>(`[data-nav-group="${openGroup}"] > button`)?.focus();
-      setOpenGroup(null);
-    };
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [openGroup]);
-
   const closeMenu = useCallback((restoreFocus = false) => {
     setMenuOpen(false);
     if (restoreFocus) menuButtonRef.current?.focus();
   }, []);
 
   const tone: Tone = overHero && overFilm ? "dark" : "light";
-  const isActive = (link: NavLink) =>
-    onHomepage ? !link.href && link.sectionId === activeSection : Boolean(link.href && pathname.startsWith(link.href));
+  const isActive = (item: NavItem) =>
+    item.href
+      ? pathname === item.href || pathname.startsWith(`${item.href}/`)
+      : onHomepage && item.sectionId === activeSection;
   // Over the film every pill stays night blue, as designed; the reading position shows once off it.
   const showActive = tone === "light";
   const homeHref = onHomepage ? anchor(sectionIds.home) : "/";
@@ -134,29 +101,22 @@ export function SiteHeader({
         <Wordmark href={homeHref} tone={tone} businessName={businessName} onHomepage={onHomepage} />
 
         <nav aria-label="Primary" className="pointer-events-auto hidden items-start gap-[5px] lg:flex">
-          {mainNav.map((item) =>
-            item.children ? (
-              <NavGroup
-                key={item.label}
-                item={item}
-                tone={tone}
-                open={openGroup === item.label}
-                onOpenChange={(open) => setOpenGroup(open ? item.label : null)}
-                onHomepage={onHomepage}
-                active={showActive && item.children.some(isActive)}
-              />
+          {mainNav.map((item) => {
+            const active = showActive && isActive(item);
+            return item.megaMenu ? (
+              <ProductsMenu key={item.label} item={item} tone={tone} active={active} pathname={pathname} />
             ) : (
-              <a
+              <SmartLink
                 key={item.label}
                 href={navHref(item, onHomepage)}
-                aria-current={showActive && isActive(item) ? "true" : undefined}
-                className={pillClasses(tone, showActive && isActive(item), item.label.length > 7)}
+                aria-current={active ? "page" : undefined}
+                className={pillClasses(tone, active, item.label.length > 7)}
               >
                 {item.label}
-              </a>
-            ),
-          )}
-          <ContactLink tone={tone} />
+              </SmartLink>
+            );
+          })}
+          <ContactLink tone={tone} active={showActive && isActive(contactNav)} />
         </nav>
 
         <button
@@ -187,7 +147,7 @@ export function SiteHeader({
   );
 }
 
-/** Figma "Navigation / Pill": 40 px tall, 94 px wide (115 px for longer labels or a badge). */
+/** Figma "Navigation / Pill": 40 px tall, 94 px wide (115 px for longer labels). */
 function pillClasses(tone: Tone, active = false, wide = false) {
   return cn(
     "flex h-10 items-center justify-between gap-2 rounded-[11px] pr-3 pl-4 text-[12px] leading-[1.5] whitespace-nowrap transition-[background-color,color,box-shadow] duration-300",
@@ -211,7 +171,7 @@ function Wordmark({
   onHomepage: boolean;
 }) {
   return (
-    <a
+    <SmartLink
       href={href}
       aria-label={`${businessName} — ${onHomepage ? "back to top" : "home"}`}
       className={cn(
@@ -227,107 +187,134 @@ function Wordmark({
         <span className="block">ISHITA</span>
         <span className="block">TRADERS</span>
       </span>
-    </a>
+    </SmartLink>
   );
 }
 
-function ContactLink({ tone }: { tone: Tone }) {
+function ContactLink({ tone, active }: { tone: Tone; active: boolean }) {
   return (
-    <a
-      href={anchor(contactNav.sectionId)}
+    <SmartLink
+      href={pageLinks.contact}
+      aria-current={active ? "page" : undefined}
       className={cn(
         "group/action ml-[3px] flex h-[52px] w-[135px] items-center justify-between rounded-[12px] pr-3 pl-4 text-[14px] leading-[1.5] whitespace-nowrap transition-colors duration-300",
         tone === "dark" ? "bg-white text-ish-ink hover:bg-ish-pale" : "bg-ish-blue text-white hover:bg-ish-blue-deep",
+        active && "bg-ish-blue-deep",
       )}
     >
       {contactNav.label}
       <ArrowIcon className="size-[18px] transition-transform duration-300 ease-out-expo group-hover/action:translate-x-1" />
-    </a>
+    </SmartLink>
   );
 }
 
-function CountBadge({ count, tone }: { count: number; tone: "lime" | "blue" }) {
-  return (
-    <span
-      className={cn(
-        "grid size-[17px] place-items-center rounded-full text-[10px] leading-none font-bold tabular-nums",
-        tone === "lime" ? "bg-ish-lime text-[#132407]" : "bg-ish-blue text-white",
-      )}
-    >
-      {count}
-    </span>
-  );
-}
-
-/** A pill that opens a white dropdown: on hover with a mouse, on click or Enter otherwise. */
-function NavGroup({
+/**
+ * The Products pill and its mega menu. A mouse opens it on hover (and a click then goes to the
+ * catalogue); touch and keyboard toggle it like a disclosure. Escape, a click outside or focus
+ * leaving it closes it.
+ */
+function ProductsMenu({
   item,
   tone,
-  open,
-  onOpenChange,
-  onHomepage,
   active,
+  pathname,
 }: {
   item: NavItem;
   tone: Tone;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onHomepage: boolean;
   active: boolean;
+  pathname: string;
 }) {
   const id = useId();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const groupRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const closeTimer = useRef(0);
-  const count = navCount(item);
+  const openedByHover = useRef(false);
+
+  const close = useCallback(() => {
+    window.clearTimeout(closeTimer.current);
+    openedByHover.current = false;
+    setOpen(false);
+  }, []);
+
+  // A new page closes it.
+  const [shownOn, setShownOn] = useState(pathname);
+  if (shownOn !== pathname) {
+    setShownOn(pathname);
+    setOpen(false);
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!groupRef.current?.contains(event.target as Node)) close();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (groupRef.current?.contains(document.activeElement)) buttonRef.current?.focus();
+      close();
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, close]);
+
+  useEffect(() => () => window.clearTimeout(closeTimer.current), []);
+
   const onPointerEnter = (event: ReactPointerEvent) => {
     if (event.pointerType !== "mouse") return;
     window.clearTimeout(closeTimer.current);
-    onOpenChange(true);
+    if (!open) openedByHover.current = true;
+    setOpen(true);
   };
   const onPointerLeave = (event: ReactPointerEvent) => {
     if (event.pointerType !== "mouse") return;
     window.clearTimeout(closeTimer.current);
-    closeTimer.current = window.setTimeout(() => onOpenChange(false), 160);
+    closeTimer.current = window.setTimeout(close, 180);
   };
-  useEffect(() => () => window.clearTimeout(closeTimer.current), []);
+  const onClick = (event: ReactMouseEvent<HTMLButtonElement>) => {
+    // A mouse click on the pill whose menu the hover already opened means "take me there".
+    if (open && openedByHover.current && event.detail > 0) {
+      close();
+      router.push(item.href ?? pageLinks.products);
+      return;
+    }
+    openedByHover.current = false;
+    setOpen(!open);
+  };
 
   return (
     <div
+      ref={groupRef}
       data-nav-group={item.label}
-      className="relative"
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}
+      // Focus moving on to another control closes it; a tap on the panel's blank space doesn't.
+      onBlur={(event) => {
+        const next = event.relatedTarget as Node | null;
+        if (next && !groupRef.current?.contains(next)) close();
+      }}
     >
       <button
+        ref={buttonRef}
         type="button"
         aria-expanded={open}
         aria-controls={id}
-        onClick={() => onOpenChange(!open)}
+        onClick={onClick}
         className={pillClasses(tone, active || open, true)}
       >
         {item.label}
-        {count > 0 ? (
-          <CountBadge count={count} tone={item.sectionId === sectionIds.products ? "lime" : "blue"} />
-        ) : null}
+        <ChevronDownIcon className={cn("size-3.5 transition-transform duration-300", open && "rotate-180")} />
       </button>
-      {/* The gap under the pill is part of the hover area, so the pointer can travel into the list. */}
-      <div id={id} hidden={!open} className="absolute top-full left-0 pt-[9px]">
-        <ul className="w-[220px] animate-[dropdown-in_180ms_var(--ease-out-expo)] rounded-[12px] bg-white p-2 text-ish-ink shadow-[0_12px_28px_rgb(11_29_54/0.19)]">
-          {item.children?.map((child) => (
-            <li key={child.label}>
-              <SmartLink
-                href={navHref(child, onHomepage)}
-                onClick={() => onOpenChange(false)}
-                className={cn(
-                  "flex items-center justify-between rounded-[7px] px-3 py-3 text-[14px] leading-[1.3] transition-colors hover:bg-ish-pale hover:text-ish-blue",
-                  child.href && "mt-1 border-t border-ish-line/60 pt-3.5 text-ish-blue",
-                )}
-              >
-                {child.label}
-                {child.href ? <ArrowIcon className="size-4" /> : null}
-              </SmartLink>
-            </li>
-          ))}
-        </ul>
+      {/* Spans the header so the panel can centre on the page; its top padding bridges the hover. */}
+      <div id={id} hidden={!open} className="absolute inset-x-0 top-[57px] px-4 pt-[18px] lg:px-6">
+        <div className="mx-auto w-full max-w-[1208px] animate-[dropdown-in_200ms_var(--ease-out-expo)]">
+          <MegaMenuPanel onNavigate={close} />
+        </div>
       </div>
     </div>
   );
@@ -335,8 +322,8 @@ function NavGroup({
 
 /**
  * Phones and tablets: the design's white menu sheet under the wordmark, with the links as pale
- * pills (Products and Solutions expand in place), the blue Contact button and quick call /
- * WhatsApp actions. The rest of the page is inert while it is open; Tab stays inside.
+ * pills (Products expands to the catalogue and its brands), the blue Contact button and quick
+ * call / WhatsApp actions. The rest of the page is inert while it is open; Tab stays inside.
  */
 function SiteMenu({
   open,
@@ -354,13 +341,13 @@ function SiteMenu({
   homeHref: string;
   businessName: string;
   onHomepage: boolean;
-  isActive: (link: NavLink) => boolean;
+  isActive: (item: NavItem) => boolean;
   phoneHref: string;
   phoneDisplay: string;
   whatsappHref: string;
 }) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [productsOpen, setProductsOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -380,7 +367,7 @@ function SiteMenu({
       background.forEach((el) => (el.inert = false));
       document.removeEventListener("keydown", onKeyDown);
       wide.removeEventListener("change", onBreakpoint);
-      setExpanded(null);
+      setProductsOpen(false);
     };
   }, [open, onClose]);
 
@@ -406,6 +393,10 @@ function SiteMenu({
       "flex min-h-[50px] w-full items-center justify-between gap-3 rounded-[11px] px-[15px] py-3 text-left text-[16px] leading-[1.3] transition-colors",
       active ? "bg-ish-blue text-white" : "bg-[#edf4fc] text-ish-ink active:bg-[#dce9fc]",
     );
+  const follow = (event: ReactMouseEvent<HTMLAnchorElement>, href: string) => {
+    applyInOpenCatalogue(event, href);
+    onClose();
+  };
 
   return (
     <AnimatePresence>
@@ -427,7 +418,7 @@ function SiteMenu({
           }}
         >
           <div className="flex items-start justify-between gap-3 px-[13px] pt-[17px] min-[390px]:px-[17px]">
-            <a
+            <SmartLink
               href={homeHref}
               onClick={() => onClose()}
               aria-label={`${businessName} — ${onHomepage ? "back to top" : "home"}`}
@@ -438,7 +429,7 @@ function SiteMenu({
                 <span className="block">ISHITA</span>
                 <span className="block">TRADERS</span>
               </span>
-            </a>
+            </SmartLink>
             <button
               ref={closeButtonRef}
               type="button"
@@ -456,85 +447,92 @@ function SiteMenu({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.35, ease: EASE }}
-            className="mx-[13px] mt-3 mb-6 rounded-[17px] bg-white p-3 text-ish-ink shadow-[0_15px_25px_rgb(2_18_38/0.19)] min-[390px]:mx-[17px]"
+            className="mx-[13px] mt-3 mb-6 rounded-[17px] bg-white p-3 text-ish-ink shadow-[0_15px_25px_rgb(2_18_38/0.19)] min-[390px]:mx-[17px] sm:mx-auto sm:max-w-[30rem]"
           >
             <ul className="flex flex-col gap-1">
               {mainNav.map((item) => {
-                if (!item.children) {
-                  const active = isActive(item);
+                const active = isActive(item);
+                if (!item.megaMenu) {
                   return (
                     <li key={item.label}>
-                      <a
+                      <SmartLink
                         href={navHref(item, onHomepage)}
                         onClick={() => onClose()}
-                        aria-current={active ? "true" : undefined}
+                        aria-current={active ? "page" : undefined}
                         className={linkClasses(active)}
                       >
                         {item.label}
-                      </a>
+                      </SmartLink>
                     </li>
                   );
                 }
-                const groupOpen = expanded === item.label;
-                const count = navCount(item);
                 return (
                   <li key={item.label}>
                     <button
                       type="button"
-                      aria-expanded={groupOpen}
-                      onClick={() => setExpanded(groupOpen ? null : item.label)}
-                      className={linkClasses(false)}
+                      aria-expanded={productsOpen}
+                      onClick={() => setProductsOpen((value) => !value)}
+                      className={linkClasses(active)}
                     >
                       {item.label}
-                      <span className="flex items-center gap-2">
-                        {count > 0 ? (
-                          <CountBadge count={count} tone={item.sectionId === sectionIds.products ? "lime" : "blue"} />
-                        ) : null}
-                        <svg
-                          viewBox="0 0 16 16"
-                          aria-hidden="true"
-                          className={cn("size-4 transition-transform duration-300", groupOpen && "rotate-180")}
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.6"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="m4 6 4 4 4-4" />
-                        </svg>
-                      </span>
+                      <ChevronDownIcon
+                        className={cn("size-4 transition-transform duration-300", productsOpen && "rotate-180")}
+                      />
                     </button>
-                    {groupOpen ? (
-                      <ul className="mt-1 rounded-[11px] bg-[#f5f8fc] px-3 py-2">
-                        {item.children.map((child) => (
-                          <li key={child.label}>
-                            <SmartLink
-                              href={navHref(child, onHomepage)}
-                              onClick={() => onClose()}
-                              className={cn(
-                                "flex items-center justify-between rounded-[7px] px-3 py-3 text-[15px] leading-[1.3] active:bg-ish-pale",
-                                child.href && "text-ish-blue",
-                              )}
-                            >
-                              {child.label}
-                              {child.href ? <ArrowIcon className="size-4" /> : null}
-                            </SmartLink>
-                          </li>
-                        ))}
+                    {productsOpen ? (
+                      <ul className="mt-1 rounded-[11px] bg-[#f5f8fc] px-2 py-2">
+                        <li>
+                          <SmartLink
+                            href={pageLinks.products}
+                            onClick={(event) => follow(event, pageLinks.products)}
+                            className="flex items-center justify-between rounded-[8px] px-3 py-3 text-[15px] leading-[1.3] font-semibold text-ish-blue active:bg-ish-pale"
+                          >
+                            Full catalogue
+                            <ArrowIcon className="size-4" />
+                          </SmartLink>
+                        </li>
+                        {megaMenu.map((brand) => {
+                          const href = megaMenuHref(brand.slug);
+                          return (
+                            <li key={brand.slug} className="border-t border-ish-line/50">
+                              <SmartLink
+                                href={href}
+                                onClick={(event) => follow(event, href)}
+                                className="flex items-center justify-between gap-3 rounded-[8px] px-3 py-2.5 text-[15px] leading-[1.3] active:bg-ish-pale"
+                              >
+                                <span className="flex flex-col">
+                                  {brand.name}
+                                  <span className="text-[12.5px] text-ish-muted">
+                                    {brand.columns
+                                      .flat()
+                                      .map((group) => group.title)
+                                      .join(" · ")}
+                                  </span>
+                                </span>
+                                <Image
+                                  src={brand.logo.src}
+                                  alt=""
+                                  className="h-[18px] w-auto max-w-[84px] shrink-0 object-contain"
+                                />
+                              </SmartLink>
+                            </li>
+                          );
+                        })}
                       </ul>
                     ) : null}
                   </li>
                 );
               })}
               <li className="mt-1">
-                <a
-                  href={anchor(contactNav.sectionId)}
+                <SmartLink
+                  href={pageLinks.contact}
                   onClick={() => onClose()}
+                  aria-current={isActive(contactNav) ? "page" : undefined}
                   className="flex min-h-[52px] items-center justify-between rounded-[12px] bg-ish-blue px-4 text-[16px] text-white"
                 >
                   {contactNav.label}
                   <ArrowIcon className="size-[18px]" />
-                </a>
+                </SmartLink>
               </li>
             </ul>
             <div className="mt-3 grid grid-cols-2 gap-2 border-t border-ish-line/70 pt-3">

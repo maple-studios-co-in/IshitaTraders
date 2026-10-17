@@ -2,23 +2,27 @@ import type { Metadata } from "next";
 
 import { getCatalog } from "@/admin/content/catalog";
 import { imageUrl } from "@/admin/content/images";
+import { contactLinks, resolveLink } from "@/admin/content/links";
 import { getSiteSettings } from "@/admin/content/settings";
 import type { SiteSettings } from "@/admin/content/settings-schema";
-import { AboutIntro } from "@/components/home/about-intro";
-import { Applications } from "@/components/home/applications";
-import { ContactSection } from "@/components/home/contact-section";
-import { CustomerStories } from "@/components/home/customer-stories";
-import { DirectorWord } from "@/components/home/director-word";
-import { EverydayEnergy } from "@/components/home/everyday-energy";
-import { LocalService } from "@/components/home/local-service";
-import { ProductLineup } from "@/components/home/product-lineup";
-import { Questions } from "@/components/home/questions";
-import { SavingsCalculator } from "@/components/home/savings-calculator";
-import { TrustedBrands } from "@/components/home/trusted-brands";
-import { SiteFooter } from "@/components/layout/site-footer";
+import { FinalCta, SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
-import { Hero } from "@/components/hero/hero";
+import { About } from "@/components/sections/about";
+import { BrandPartners } from "@/components/sections/brand-partners";
+import { Contact } from "@/components/sections/contact";
+import { DirectorMessage } from "@/components/sections/director-message";
+import { Faq } from "@/components/sections/faq";
+import { FeaturedProducts } from "@/components/sections/featured-products";
+import { Hero, HeroContactStrip } from "@/components/sections/hero";
+import { Installations } from "@/components/sections/installations";
+import { ProductCategories } from "@/components/sections/product-categories";
+import { ProductShowcase } from "@/components/sections/product-showcase";
+import { SolarHomeBanner, SolarSolutions } from "@/components/sections/solar-solutions";
+import { SunlightToElectricity } from "@/components/sections/sunlight-to-electricity";
+import { Testimonials } from "@/components/sections/testimonials";
+import { WhyChooseUs } from "@/components/sections/why-choose-us";
 import { siteConfig } from "@/config/site";
+import { showcaseSlides } from "@/content/home";
 
 // Only the canonical here: a page-level `openGraph` would replace the root layout's whole block (image included).
 export const metadata: Metadata = {
@@ -70,40 +74,38 @@ function StructuredData({ settings, brands }: { settings: SiteSettings; brands: 
   );
 }
 
-/** Figma coBLUmSDJE5yrXgsWcbpCF, "Desktop / 1440 px" and "Mobile / 390 px", top to bottom. */
 export default async function HomePage() {
   const [settings, catalog] = await Promise.all([getSiteSettings(), getCatalog()]);
-  const { business, hero } = settings;
-  const liveCategories = new Set(
-    catalog.products.map((product) => product.category?.slug).filter((slug): slug is string => Boolean(slug)),
-  );
-  const director = [business.director.honorific, business.director.name].filter(Boolean).join(" ");
+  const links = contactLinks(settings.contact);
+  const slides = showcaseSlides.map((slide) => ({
+    ...slide,
+    cta: { ...slide.cta, href: resolveLink(slide.cta.href, links) },
+  }));
 
   return (
     <>
       <StructuredData settings={settings} brands={catalog.brands.map((brand) => brand.name)} />
-      <SiteHeader contact={settings.contact} businessName={business.name} overHero />
-      <main id="main-content" tabIndex={-1} data-page-content className="font-archivo outline-none">
+      <SiteHeader contact={settings.contact} businessName={settings.business.name} overHero />
+      <main id="main-content" tabIndex={-1} data-page-content className="outline-none">
         <Hero />
         {/* Slides up over the hero film's last frame (see .hero-film in globals.css). */}
         <div data-hero-cover className="relative bg-white shadow-[0_-28px_60px_-24px_rgb(0_0_0/0.45)]">
-          <AboutIntro
-            facts={{
-              locality: business.address.locality || "Chakia",
-              region: business.address.region || "Bihar",
-              foundedYear: String(business.foundedYear),
-            }}
-          />
-          <SavingsCalculator />
-          <LocalService />
-          <EverydayEnergy />
-          <ProductLineup liveCategories={liveCategories} />
-          <CustomerStories />
-          <Applications />
-          <DirectorWord signature={director ? `${director}, ${business.name}` : business.name} />
-          <TrustedBrands names={hero.trustedBrands} catalogueBrands={catalog.brands} />
-          <Questions structuredData />
-          <ContactSection />
+          <HeroContactStrip />
+          <BrandPartners />
+          <ProductCategories />
+          <About />
+          <FeaturedProducts />
+          <Contact />
+          <SolarSolutions />
+          <SolarHomeBanner />
+          <WhyChooseUs />
+          <Installations />
+          <SunlightToElectricity />
+          <ProductShowcase slides={slides} />
+          <Testimonials />
+          <DirectorMessage />
+          <Faq />
+          <FinalCta />
         </div>
       </main>
       <SiteFooter />

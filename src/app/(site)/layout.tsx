@@ -1,13 +1,16 @@
+import { contactLinks } from "@/admin/content/links";
 import { getSiteSettings } from "@/admin/content/settings";
 import { AnnouncementBar } from "@/admin/site/announcement-bar";
 import { GoogleAnalytics } from "@/admin/site/google-analytics";
 import { LeadTracker } from "@/admin/site/lead-tracker";
+import { MobileDock } from "@/components/layout/mobile-dock";
 import { MotionProvider } from "@/components/providers/motion-provider";
 import { SmoothScroll } from "@/components/providers/smooth-scroll";
 
 /** Public website shell: smooth scrolling, motion, announcement bar, contact-click tracking. */
 export default async function SiteLayout({ children }: LayoutProps<"/">) {
-  const { announcement, seo } = await getSiteSettings();
+  const { announcement, seo, contact } = await getSiteSettings();
+  const links = contactLinks(contact);
   return (
     <>
       <a
@@ -18,6 +21,7 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
       </a>
       <AnnouncementBar announcement={announcement} />
       <MotionProvider>{children}</MotionProvider>
+      <MobileDock phoneHref={links.phone} phoneDisplay={contact.phoneDisplay} whatsappHref={links.whatsapp()} />
       <SmoothScroll />
       <LeadTracker />
       {seo.gaMeasurementId ? <GoogleAnalytics measurementId={seo.gaMeasurementId} /> : null}

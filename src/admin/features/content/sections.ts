@@ -32,7 +32,11 @@ export const contentSections = [
     label: "Products page",
     description: "Banner image, button text, trust badges and the RFQ form headings.",
   },
-  { key: "homepage", label: "Homepage video", description: "The solar installation video behind the play button." },
+  {
+    key: "homepage",
+    label: "Videos",
+    description: "The homepage solar installation video and the client videos on the Our Clients page.",
+  },
   { key: "notifications", label: "Email alerts", description: "Who gets an email for each new enquiry." },
 ] as const satisfies { key: Exclude<SettingsKey, "seo">; label: string; description: string }[];
 
