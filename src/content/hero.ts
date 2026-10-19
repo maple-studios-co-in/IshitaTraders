@@ -22,10 +22,10 @@ export interface HeroScroll {
 
 export const heroFilm = {
   frameCount: 140,
-  /** The original 16:9 frames. */
-  wide: { path: "/sequences/hero-v1/wide", width: 1920, height: 1080 } satisfies HeroFilmSet,
+  /** The 16:9 frames. v2: frames 110-139 carry the Gujarat–Rajasthan skyline. */
+  wide: { path: "/sequences/hero-v2/wide", width: 1920, height: 1080 } satisfies HeroFilmSet,
   /** Centre crops for portrait phones — a quarter of the bytes. */
-  tall: { path: "/sequences/hero-v1/tall", width: 608, height: 1080 } satisfies HeroFilmSet,
+  tall: { path: "/sequences/hero-v2/tall", width: 608, height: 1080 } satisfies HeroFilmSet,
   /** Below this viewport aspect ratio (width / height) the portrait set is used. */
   tallBelowAspect: 0.62,
   desktop: { play: 4800, hold: 300 } satisfies HeroScroll,

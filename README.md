@@ -80,12 +80,12 @@ See `.env.example`.
 
 ## Behaviour notes
 
-- **Hero film** — a 140-frame sequence (`public/sequences/hero-v1`) scrubbed by scroll on a canvas, with
+- **Hero film** — a 140-frame sequence (`public/sequences/hero-v2`) scrubbed by scroll on a canvas, with
   eight caption scenes (editable in Admin → Site content → Hero), a "charging" loader while the opening
   frames load, frosted-pill navigation over the film and the page sliding up over its last frame.
   Phones get centre-cropped portrait frames (`tall/`, about a quarter of the bytes). Reduced motion or
   no JavaScript show the opening still as a plain banner. Frames are cached forever, so a new cut must
-  ship under a new folder (`hero-v2`) — update the paths in `src/content/hero.ts`.
+  ship under a new folder (next: `hero-v3`) — update the paths in `src/content/hero.ts`.
 - **Navigation** — in-page anchors with a sticky header; the active nav item follows the section being read.
 - **"Solar range" showcase** — on desktop the section pins while you scroll through Solar Panels → Inverters →
   Batteries (matching the three Figma variants); on tablets/phones it becomes stacked cards.
@@ -104,9 +104,12 @@ Security headers (HSTS, X-Frame-Options, nosniff, Referrer-Policy, Permissions-P
 
 ## Open items
 
-- **Hero film frames** (`public/sequences/hero-v1`) are the FAERS reference sequence (source URLs in the
-  design package's `provenance.json`); they are not Ishita footage. License them from FAERS or replace
-  them with Ishita's own film before launch.
+- **Hero film frames** (`public/sequences/hero-v2`) are the FAERS reference sequence (source URLs in the
+  design package's `provenance.json`); they are not Ishita footage. In v2 the closing desert shot
+  (frames 110–139) carries a generated Gujarat–Rajasthan skyline composited over those frames (frames
+  110–111 blend it in during the dissolve; 134, a repeat of 133 in the source, is rebuilt as the
+  in-between frame). It is still FAERS footage underneath: license it from FAERS or replace it with
+  Ishita's own film before launch.
 - Product/brand "View … Products" buttons point to the on-page catalogue until the Products page is built —
   update `productLinks` in `src/config/navigation.ts` when it exists.
 - Social profile URLs are not in the design; add them to `siteConfig.socials` and the footer icons appear.
