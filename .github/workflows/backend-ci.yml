@@ -1,0 +1,64 @@
+# Lint, format check and tests for the API (backend/) on every push or pull request that touches it,
+# against a throwaway PostgreSQL 16 built from the website's own migrations.
+name: Backend CI
+
+on:
+  push:
+    paths:
+      - "backend/**"
+      - "src/admin/server/db/migrations/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - "src/admin/server/db/migrations/**"
+      - ".github/workflows/backend-ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ishita_api
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: ishita_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ishita_api -d ishita_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      NODE_ENV: test
+      LOG_LEVEL: silent
+      DATABASE_URL: postgres://ishita_api:ci-only-password@localhost:5432/ishita_test
+      CORS_ORIGINS: http://localhost:3070
+      PUBLIC_SITE_URL: https://ishita.example
+      IP_HASH_SECRET: ci-only-ip-hash-secret
+      API_RATE_LIMIT: "1000"
+      ENQUIRY_RATE_LIMIT: "3"
+      ENQUIRY_RATE_WINDOW_MINUTES: "10"
+      ADMIN_API_KEY: ci-only-admin-api-key-0123456789abcdef
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm test

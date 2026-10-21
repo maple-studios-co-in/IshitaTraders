@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The API has its own lint setup (backend/eslint.config.js).
+    "backend/**",
   ]),
 ]);
 
