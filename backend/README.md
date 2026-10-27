@@ -206,14 +206,15 @@ first, then the API.
 
 ### Vercel
 
-A second Vercel project, next to the website's, from the same repository:
+A second Vercel project, next to the website's, from the same repository: `ishita-traders-api`, live at
+https://ishita-traders-api.vercel.app.
 
 - **Root directory:** `backend`. Vercel detects Express and runs the default export of
   `src/app.js` as one function (Fluid compute). There's no build or start command.
 - **Settings:** as above. Vercel's Neon integration can add `DATABASE_URL` itself: connect the
   website's database to this project too. The pooled (`-pooler`) address is best here; on it, the
   10-second statement limit is left to the database.
-- **Function region:** the region nearest the Neon database (Settings → Functions).
+- **Function region:** `iad1` in `vercel.json`, the region of the Neon database (keep them together).
 - **Builds:** `vercel.json` skips a deployment when nothing in `backend/` changed.
 - On Vercel, `waitUntil` keeps a function running until the enquiry webhook is sent, and
   `attachDatabasePool` closes idle connections before the function is frozen.
