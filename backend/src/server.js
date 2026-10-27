@@ -5,14 +5,13 @@
  * connections, lets in-flight requests finish, closes the database pool and exits. If that takes
  * longer than 10 s, it exits anyway so a deploy never hangs.
  */
-import { createApp } from "./app.js";
+import app from "./app.js";
 import { env } from "./config/env.js";
 import { closePool, query } from "./db/pool.js";
 import { logger } from "./lib/logger.js";
 
 const SHUTDOWN_GRACE_MS = 10_000;
 
-const app = createApp();
 const server = app.listen(env.PORT, env.HOST, () => {
   logger.info({ url: `http://${env.HOST}:${env.PORT}`, env: env.NODE_ENV }, "API listening");
 });

@@ -1,7 +1,7 @@
 /**
  * Builds the Express application: middleware in the order every request passes through it, then
  * the routes, then the 404 and error handlers. It doesn't listen on a port (server.js does), so the
- * tests can drive the very same app in memory.
+ * tests can drive the very same app in memory and Vercel can run it as a function.
  */
 import { randomUUID } from "node:crypto";
 
@@ -75,3 +75,9 @@ export function createApp() {
 
   return app;
 }
+
+/**
+ * The one running app. server.js listens with it; Vercel imports this file and serves the default
+ * export as a function (its Express support looks for src/app.js).
+ */
+export default createApp();

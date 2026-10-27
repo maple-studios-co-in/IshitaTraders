@@ -189,19 +189,39 @@ migrations and `tests/fixtures`, then runs every test. The reset script refuses 
 `NODE_ENV=test` and the database name ends in `_test`. CI does the same on every push
 (`.github/workflows/backend-ci.yml`).
 
-## Deploying (e.g. Render, Railway)
+## Deploying
+
+**Settings** (the same on every host):
+
+- `NODE_ENV=production`
+- `TRUST_PROXY=1`
+- `DATABASE_URL`: the website's Neon URL.
+- `CORS_ORIGINS=https://ishita-traders.vercel.app` (plus any other site that should call it).
+- `PUBLIC_SITE_URL=https://ishita-traders.vercel.app`
+- `IP_HASH_SECRET`: the website's `AUTH_SECRET`.
+- `ADMIN_API_KEY`: a long random value, only if you need the admin routes.
+
+**Schema changes** are still made in the website (`npm run db:generate` there). Deploy the website
+first, then the API.
+
+### Vercel
+
+A second Vercel project, next to the website's, from the same repository: `ishita-traders-api`, live at
+https://ishita-traders-api.vercel.app.
+
+- **Root directory:** `backend`. Vercel detects Express and runs the default export of
+  `src/app.js` as one function (Fluid compute). There's no build or start command.
+- **Settings:** as above. Vercel's Neon integration can add `DATABASE_URL` itself: connect the
+  website's database to this project too. The pooled (`-pooler`) address is best here; on it, the
+  10-second statement limit is left to the database.
+- **Function region:** `iad1` in `vercel.json`, the region of the Neon database (keep them together).
+- **Builds:** `vercel.json` skips a deployment when nothing in `backend/` changed.
+- On Vercel, `waitUntil` keeps a function running until the enquiry webhook is sent, and
+  `attachDatabasePool` closes idle connections before the function is frozen.
+
+### Render, Railway or any Node host
 
 - **Root directory:** `backend`
 - **Build command:** `npm ci --omit=dev`
 - **Start command:** `npm start`
 - **Health check path:** `/health/ready`
-- **Settings:**
-  - `NODE_ENV=production`
-  - `TRUST_PROXY=1`
-  - `DATABASE_URL`: the website's Neon URL, with `sslmode=verify-full`.
-  - `CORS_ORIGINS=https://ishita-traders.vercel.app` (plus any other site that should call it).
-  - `PUBLIC_SITE_URL=https://ishita-traders.vercel.app`
-  - `IP_HASH_SECRET`: the website's `AUTH_SECRET`.
-  - `ADMIN_API_KEY`: a long random value, only if you need the admin routes.
-- **Schema changes** are still made in the website (`npm run db:generate` there). Deploy the website
-  first, then the API.

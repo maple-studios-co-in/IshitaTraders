@@ -7,6 +7,7 @@
  * The schema is owned by the website (src/admin/server/db/migrations): this API reads and writes
  * those tables but never migrates them.
  */
+import { attachDatabasePool } from "@vercel/functions";
 import pg from "pg";
 
 import { env } from "../config/env.js";
@@ -17,30 +18,41 @@ import { logger } from "../lib/logger.js";
 pg.types.setTypeParser(pg.types.builtins.INT8, (value) => Number.parseInt(value, 10));
 
 /**
- * Hosted Postgres URLs (Neon) carry parameters pg doesn't use or warns about: `channel_binding` is
- * dropped, and `sslmode=require` becomes `verify-full` (what pg already does, minus the warning).
+ * Pool settings for a database URL. Hosted Postgres URLs (Neon) carry parameters pg doesn't use or
+ * warns about: `channel_binding` is dropped, and `sslmode=require` becomes `verify-full` (what pg
+ * already does, minus the warning).
  */
-function normalizeDatabaseUrl(raw) {
-  const url = new URL(raw);
+export function poolConfig(databaseUrl, { onVercel = false } = {}) {
+  const url = new URL(databaseUrl);
   url.searchParams.delete("channel_binding");
   if (["prefer", "require", "verify-ca"].includes(url.searchParams.get("sslmode") ?? "")) {
     url.searchParams.set("sslmode", "verify-full");
   }
-  return url.toString();
+  // PgBouncer-style poolers (Neon "-pooler" hosts) refuse settings sent when connecting, so the
+  // statement limit below only goes to direct connections.
+  const pooled = url.hostname.includes("-pooler.");
+
+  return {
+    connectionString: url.toString(),
+    max: env.DATABASE_POOL_MAX,
+    // A Vercel function is frozen between requests, so it closes idle connections sooner.
+    idleTimeoutMillis: onVercel ? 5_000 : 30_000,
+    // Neon can take a few seconds to wake a database that has scaled to zero.
+    connectionTimeoutMillis: 10_000,
+    // A runaway query is cancelled by the database after 10 s instead of holding a connection.
+    ...(pooled ? {} : { statement_timeout: 10_000 }),
+    application_name: "ishita-traders-api",
+  };
 }
 
-export const pool = new pg.Pool({
-  connectionString: normalizeDatabaseUrl(env.DATABASE_URL),
-  max: env.DATABASE_POOL_MAX,
-  idleTimeoutMillis: 30_000,
-  connectionTimeoutMillis: 5_000,
-  // A runaway query is cancelled by the database after 10 s instead of holding a connection.
-  statement_timeout: 10_000,
-  application_name: "ishita-traders-api",
-});
+export const pool = new pg.Pool(poolConfig(env.DATABASE_URL, { onVercel: env.isVercel }));
 
 // An idle connection can drop (database restart, network blip). The pool replaces it; just log it.
 pool.on("error", (error) => logger.error({ err: error }, "idle database connection failed"));
+
+// On Vercel, keeps the function awake until idle connections are closed, so a frozen function never
+// wakes up holding dead sockets. Elsewhere it does nothing.
+attachDatabasePool(pool);
 
 /** Runs one parameterised query and returns pg's result ({ rows, rowCount, … }). */
 export function query(text, params = []) {
