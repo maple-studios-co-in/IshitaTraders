@@ -34,8 +34,10 @@ const schema = z
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     HOST: optional(z.string()),
     PORT: integer(1, 65535, 4000),
-    /** Proxy hops in front of the API (1 on Render/Railway/Heroku), so req.ip is the visitor's address. */
+    /** Proxy hops in front of the API (1 on Vercel/Render/Railway), so req.ip is the visitor's address. */
     TRUST_PROXY: integer(0, 10, 0),
+    /** Set to "1" by Vercel on its functions. */
+    VERCEL: optional(z.string()),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
 
     DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
@@ -69,6 +71,7 @@ const schema = z
     IP_HASH_SECRET: values.IP_HASH_SECRET ?? "development-only-ip-hash-secret",
     isProduction: values.NODE_ENV === "production",
     isTest: values.NODE_ENV === "test",
+    isVercel: values.VERCEL === "1",
   }));
 
 const parsed = schema.safeParse(process.env);

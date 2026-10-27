@@ -4,6 +4,8 @@
  */
 import { randomUUID } from "node:crypto";
 
+import { waitUntil } from "@vercel/functions";
+
 import { badRequest } from "../../lib/errors.js";
 import { hashIp } from "../../lib/ip-hash.js";
 import { logger } from "../../lib/logger.js";
@@ -62,20 +64,23 @@ export async function createEnquiry(input, meta) {
   });
 
   // Not awaited: the visitor gets their answer now; the notification follows in the background.
-  void sendWebhook("enquiry.created", {
-    id: row.id,
-    form: API_FORM.key,
-    formName: API_FORM.name,
-    name: input.name,
-    phone: input.phone,
-    email: input.email ?? "",
-    company: input.company ?? "",
-    subject: input.subject ?? "",
-    product: product?.name ?? "",
-    message: input.message,
-    fields,
-    createdAt: row.created_at,
-  });
+  // waitUntil keeps a Vercel function running until it is sent (elsewhere it does nothing).
+  waitUntil(
+    sendWebhook("enquiry.created", {
+      id: row.id,
+      form: API_FORM.key,
+      formName: API_FORM.name,
+      name: input.name,
+      phone: input.phone,
+      email: input.email ?? "",
+      company: input.company ?? "",
+      subject: input.subject ?? "",
+      product: product?.name ?? "",
+      message: input.message,
+      fields,
+      createdAt: row.created_at,
+    }),
+  );
 
   return { id: row.id, createdAt: row.created_at };
 }
