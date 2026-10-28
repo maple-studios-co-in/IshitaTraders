@@ -96,6 +96,7 @@ export function HeroFilm({ scenes, brands }: { scenes: string[]; brands: string[
           {brands.length > 0 ? (
             <ul
               aria-label="Brands we supply"
+              data-whatsapp-avoid="film"
               className="absolute inset-x-[17px] bottom-[calc(max(7px,env(safe-area-inset-bottom))+95px)] flex flex-wrap justify-center gap-x-[1.6em] text-[11px] leading-[1.5] font-bold text-white uppercase md:bottom-[44px] md:text-[14px]"
             >
               {brands.map((brand) => (
@@ -103,7 +104,11 @@ export function HeroFilm({ scenes, brands }: { scenes: string[]; brands: string[
               ))}
             </ul>
           ) : null}
-          <div className="absolute inset-x-[17px] bottom-[max(7px,env(safe-area-inset-bottom))] flex justify-between gap-2 md:bottom-[17px]">
+          {/* The floating WhatsApp button rises above these corner cards and the brand names. */}
+          <div
+            data-whatsapp-avoid="film"
+            className="absolute inset-x-[17px] bottom-[max(7px,env(safe-area-inset-bottom))] flex justify-between gap-2 md:bottom-[17px]"
+          >
             <HeroCardLink card={heroCards.savings} />
             <HeroCardLink card={heroCards.products} />
           </div>

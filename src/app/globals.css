@@ -556,6 +556,146 @@
   }
 }
 
+/*
+ * The floating WhatsApp button (src/components/layout/whatsapp-float.tsx). The wrapper keeps the
+ * resting place in the corner; the link inside rises above what it must not cover: the rows the
+ * component measures (--wa-lift) and, on phones, the quick-contact dock while it shows.
+ */
+.whatsapp-float {
+  --wa-dock-lift: 0px;
+  position: fixed;
+  right: max(1rem, calc(env(safe-area-inset-right) + 0.75rem));
+  bottom: max(1rem, calc(env(safe-area-inset-bottom) + 0.75rem));
+  z-index: 40;
+  width: 3.375rem;
+  height: 3.375rem;
+  pointer-events: none;
+
+  @media (width >= 48rem) {
+    right: max(1.5rem, calc(env(safe-area-inset-right) + 1rem));
+    bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem));
+    width: 3.625rem;
+    height: 3.625rem;
+  }
+
+  > a {
+    pointer-events: auto;
+    translate: 0 calc(-1 * max(var(--wa-lift, 0px), var(--wa-dock-lift)));
+    transition:
+      translate 0.55s var(--ease-out-expo),
+      scale 0.3s var(--ease-out-expo),
+      background-color 0.2s ease,
+      opacity 0.25s ease,
+      visibility 0s;
+
+    &:active {
+      scale: 0.94;
+    }
+    @media (hover: hover) {
+      &:hover {
+        scale: 1.06;
+      }
+    }
+  }
+
+  @media (width < 48rem) {
+    /* Above the dock (bottom max(0.75rem, safe area), 3.75rem tall) while it shows… */
+    .mobile-dock[data-visible] ~ & {
+      --wa-dock-lift: calc(
+        max(0.75rem, env(safe-area-inset-bottom)) + 4.5rem - max(1rem, calc(env(safe-area-inset-bottom) + 0.75rem))
+      );
+    }
+
+    /* …and out of the keyboard's way while a form field is focused. */
+    &[data-typing] > a {
+      opacity: 0;
+      scale: 0.85;
+      visibility: hidden;
+      transition:
+        translate 0.55s var(--ease-out-expo),
+        scale 0.25s ease,
+        opacity 0.25s ease,
+        visibility 0s linear 0.25s;
+    }
+  }
+}
+
+/* A soft ring that ripples out a few times after the page loads, then stays still. */
+.whatsapp-float-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--color-whatsapp);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* "Chat with us", sliding out to the left on hover or keyboard focus (desktop). */
+.whatsapp-float-label {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 0.75rem);
+  translate: 0.5rem -50%;
+  border-radius: 999px;
+  background: white;
+  padding: 0.5rem 0.95rem;
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.25rem;
+  white-space: nowrap;
+  color: var(--color-navy-900);
+  box-shadow:
+    0 12px 30px -12px rgb(0 0 0 / 0.4),
+    0 0 0 1px rgb(15 23 42 / 0.06);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    translate 0.35s var(--ease-out-expo),
+    visibility 0s linear 0.35s;
+
+  @media (hover: hover) and (width >= 48rem) {
+    a:is(:hover, :focus-visible) > & {
+      translate: 0 -50%;
+      opacity: 1;
+      visibility: visible;
+      transition:
+        opacity 0.2s ease,
+        translate 0.35s var(--ease-out-expo),
+        visibility 0s;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .whatsapp-float > a {
+    animation: whatsapp-float-in 0.7s var(--ease-out-expo) 0.3s backwards;
+  }
+  .whatsapp-float-ring {
+    animation: whatsapp-float-ripple 1.8s cubic-bezier(0, 0, 0.2, 1) 1.4s 3;
+  }
+}
+
+@keyframes whatsapp-float-in {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
+}
+
+@keyframes whatsapp-float-ripple {
+  from {
+    opacity: 0.45;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+    scale: 1.8;
+  }
+}
+
 /* Navigation dropdowns (Products mega menu) settle in from just above. */
 @keyframes dropdown-in {
   from {
