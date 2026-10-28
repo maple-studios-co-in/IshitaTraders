@@ -4,12 +4,16 @@ import { AnnouncementBar } from "@/admin/site/announcement-bar";
 import { GoogleAnalytics } from "@/admin/site/google-analytics";
 import { LeadTracker } from "@/admin/site/lead-tracker";
 import { MobileDock } from "@/components/layout/mobile-dock";
+import { WhatsAppFloat } from "@/components/layout/whatsapp-float";
 import { MotionProvider } from "@/components/providers/motion-provider";
 import { SmoothScroll } from "@/components/providers/smooth-scroll";
 
-/** Public website shell: smooth scrolling, motion, announcement bar, contact-click tracking. */
+/**
+ * Public website shell: smooth scrolling, motion, announcement bar, the floating WhatsApp button,
+ * contact-click tracking.
+ */
 export default async function SiteLayout({ children }: LayoutProps<"/">) {
-  const { announcement, seo, contact } = await getSiteSettings();
+  const { announcement, seo, contact, business } = await getSiteSettings();
   const links = contactLinks(contact);
   return (
     <>
@@ -22,6 +26,8 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
       <AnnouncementBar announcement={announcement} />
       <MotionProvider>{children}</MotionProvider>
       <MobileDock phoneHref={links.phone} phoneDisplay={contact.phoneDisplay} whatsappHref={links.whatsapp()} />
+      {/* After the dock: globals.css lifts the button above it with a sibling selector. */}
+      <WhatsAppFloat contact={contact} businessName={business.name} />
       <SmoothScroll />
       <LeadTracker />
       {seo.gaMeasurementId ? <GoogleAnalytics measurementId={seo.gaMeasurementId} /> : null}

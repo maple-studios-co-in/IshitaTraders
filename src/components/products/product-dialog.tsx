@@ -124,6 +124,8 @@ export function ProductDetails({ product, copy, contact, links, onRequestClose }
     <div
       data-track-context={inDialog ? "product-details" : "product-page"}
       data-product-slug={product.slug}
+      // On the product's own page, the floating WhatsApp button asks about this product.
+      data-whatsapp-subject={inDialog ? undefined : enquirySubject}
       className={cn("flex flex-col", inDialog && "min-h-0 flex-1")}
     >
       {/* Figma 224:6944 */}

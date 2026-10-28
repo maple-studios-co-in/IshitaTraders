@@ -209,7 +209,8 @@ export async function SiteFooter({ onHomepage = true }: { onHomepage?: boolean }
         </div>
 
         <div className="mt-12 border-t border-slate-800 pt-[31px] text-center text-[14.8px] leading-5 text-slate-400 lg:mt-4">
-          <p>{business.copyright.replaceAll("{year}", String(new Date().getFullYear()))}</p>
+          {/* The floating WhatsApp button rises above this line when it would cover it (phones). */}
+          <p data-whatsapp-avoid>{business.copyright.replaceAll("{year}", String(new Date().getFullYear()))}</p>
         </div>
       </div>
     </footer>
