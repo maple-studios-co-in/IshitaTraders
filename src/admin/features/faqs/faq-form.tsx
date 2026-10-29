@@ -44,7 +44,7 @@ export function FaqForm({ faq, onSaved }: FaqFormProps) {
         label="Answer"
         htmlFor={`${prefix}-answer`}
         error={errors.answer}
-        hint="Optional. With an answer the question expands on the website and appears as an FAQ rich result in Google; without one it opens WhatsApp."
+        hint="Shown when a visitor opens the question, and as an FAQ rich result in Google. Needed to publish — questions without an answer stay off the website."
         aside={`${answer.length}/2000`}
       >
         <Textarea

@@ -13,11 +13,17 @@ import { createSession, destroyCurrentSession } from "@/admin/server/auth/sessio
 import { DatabaseUnavailableError, getDb } from "@/admin/server/db/client";
 import { sessions, settings, users } from "@/admin/server/db/schema";
 import { env } from "@/admin/server/env";
-import { rateLimit, resetRateLimit } from "@/admin/server/security/rate-limit";
+import { loginFailuresKey, rateLimit, resetRateLimit } from "@/admin/server/security/rate-limit";
 import { getRequestMeta, hashIp } from "@/admin/server/security/request";
 
-const MAX_FAILED_LOGINS = 8;
 const LOCK_MINUTES = 15;
+/** Sign-in attempts on one email from one address per LOCK_MINUTES: enough to slow any one guesser. */
+const ATTEMPTS_PER_ADDRESS = 10;
+/**
+ * Failed sign-ins on one account within LOCK_MINUTES, from any addresses, before the account locks.
+ * One address can't reach it (ATTEMPTS_PER_ADDRESS), so nobody can lock the owner out on their own.
+ */
+const MAX_FAILED_LOGINS = 30;
 // Verifying against a throwaway hash keeps "unknown email" as slow as "wrong password".
 const DUMMY_HASH =
   "scrypt$32768$8$1$c2FsdHNhbHRzYWx0c2FsdA$7nNfE0NGF0d0k6b6m3v0R1pq9mY2XfV6H0n0eP0pQm2b8U2vXo2yP7r6m6p3N5u8mF0xUqk6r8Q0x2qVh7Y1Gg";
@@ -67,6 +73,7 @@ async function applyEnvPasswordReset(user: UserRow, email: string, password: str
     .returning();
   // Whoever knew the old password is signed out everywhere.
   await db.delete(sessions).where(eq(sessions.userId, user.id));
+  await resetRateLimit(loginFailuresKey(user.id));
   await remember();
   await logActivity(
     { id: user.id, email: user.email, name: user.name, role: user.role },
@@ -103,10 +110,11 @@ export async function signIn(_previous: ActionState, formData: FormData): Promis
   let userId: string;
   try {
     const meta = await getRequestMeta();
-    const ipKey = `login:ip:${hashIp(meta.ip) || "unknown"}`;
+    const ipHash = hashIp(meta.ip) || "unknown";
+    const attemptsKey = `login:email:${email}:${ipHash}`;
     const [byIp, byAccount] = await Promise.all([
-      rateLimit(ipKey, 20, 15 * 60),
-      rateLimit(`login:email:${email}`, 10, 15 * 60),
+      rateLimit(`login:ip:${ipHash}`, 20, LOCK_MINUTES * 60),
+      rateLimit(attemptsKey, ATTEMPTS_PER_ADDRESS, LOCK_MINUTES * 60),
     ]);
     if (!byIp.ok || !byAccount.ok) return failure("Too many sign-in attempts. Please wait 15 minutes and try again.");
 
@@ -165,13 +173,11 @@ export async function signIn(_previous: ActionState, formData: FormData): Promis
 
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) {
-      const failed = user.failedLogins + 1;
+      // Failures are counted per LOCK_MINUTES window, so old ones expire instead of adding up for ever.
+      const failures = await rateLimit(loginFailuresKey(user.id), MAX_FAILED_LOGINS, LOCK_MINUTES * 60);
       await db
         .update(users)
-        .set({
-          failedLogins: failed,
-          lockedUntil: failed >= MAX_FAILED_LOGINS ? new Date(Date.now() + LOCK_MINUTES * 60_000) : null,
-        })
+        .set({ failedLogins: user.failedLogins + 1, lockedUntil: failures.ok ? null : failures.resetAt })
         .where(eq(users.id, user.id));
       return failure("Incorrect email or password.");
     }
@@ -187,7 +193,7 @@ export async function signIn(_previous: ActionState, formData: FormData): Promis
         ...(needsRehash(user.passwordHash) ? { passwordHash: await hashPassword(password) } : {}),
       })
       .where(eq(users.id, user.id));
-    await resetRateLimit(`login:email:${email}`);
+    await Promise.all([resetRateLimit(attemptsKey), resetRateLimit(loginFailuresKey(user.id))]);
     await createSession(user.id, meta);
     await logActivity(
       { id: user.id, email: user.email, name: user.name, role: user.role },

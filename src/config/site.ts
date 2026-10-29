@@ -8,11 +8,33 @@ export interface SocialLink {
 
 const director = { honorific: "Er.", name: "Amit Kumar" } as const;
 
+/**
+ * The site's public address: canonical links, sitemap, robots.txt, social previews, links in alert
+ * emails. NEXT_PUBLIC_SITE_URL is read at build time, so a production build without it (outside
+ * Vercel) stops here rather than publishing localhost links. Errors are raised on the server only.
+ */
 function resolveSiteUrl() {
-  const explicit = process.env.NEXT_PUBLIC_SITE_URL;
-  if (explicit) return explicit.replace(/\/$/, "");
+  const onServer = typeof window === "undefined";
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit) {
+    if (
+      onServer &&
+      !/^https?:\/\/[^/\s]+\.[^/\s]+/.test(explicit) &&
+      !/^http:\/\/localhost(:\d+)?\/?$/.test(explicit)
+    ) {
+      throw new Error(
+        `NEXT_PUBLIC_SITE_URL must be a full address such as https://www.example.com (got "${explicit}").`,
+      );
+    }
+    return explicit.replace(/\/$/, "");
+  }
   const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL;
   if (vercel) return `https://${vercel}`;
+  if (onServer && process.env.NODE_ENV === "production") {
+    throw new Error(
+      "NEXT_PUBLIC_SITE_URL is not set. Add it to the hosting environment variables (e.g. NEXT_PUBLIC_SITE_URL=https://www.example.com) and build again.",
+    );
+  }
   return "http://localhost:3070";
 }
 

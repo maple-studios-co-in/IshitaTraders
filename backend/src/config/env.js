@@ -31,11 +31,18 @@ const list = (item) =>
 
 const schema = z
   .object({
-    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    /**
+     * Unset means production, so a host that doesn't set it still runs safely (every interface,
+     * real secrets required). `npm run dev` and the tests set it from .env / .env.test.
+     */
+    NODE_ENV: z.enum(["development", "test", "production"]).default("production"),
     HOST: optional(z.string()),
     PORT: integer(1, 65535, 4000),
-    /** Proxy hops in front of the API (1 on Vercel/Render/Railway), so req.ip is the visitor's address. */
-    TRUST_PROXY: integer(0, 10, 0),
+    /**
+     * Proxy hops in front of the API, so req.ip is the visitor's address: 1 on Hostinger, Vercel,
+     * Render or Railway (the default in production), 0 when nothing sits in front (other defaults).
+     */
+    TRUST_PROXY: optional(z.coerce.number().int().min(0).max(10)),
     /** Set to "1" by Vercel on its functions. */
     VERCEL: optional(z.string()),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
@@ -68,6 +75,7 @@ const schema = z
     ...values,
     // Containers and hosts need every interface; on a laptop, only this machine.
     HOST: values.HOST ?? (values.NODE_ENV === "production" ? "0.0.0.0" : "localhost"),
+    TRUST_PROXY: values.TRUST_PROXY ?? (values.NODE_ENV === "production" ? 1 : 0),
     IP_HASH_SECRET: values.IP_HASH_SECRET ?? "development-only-ip-hash-secret",
     isProduction: values.NODE_ENV === "production",
     isTest: values.NODE_ENV === "test",

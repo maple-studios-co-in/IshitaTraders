@@ -12,6 +12,7 @@ import { resolveImage } from "@/admin/content/images";
 import { stockStatuses, stockStatusLabels, type StockStatus } from "@/admin/content/types";
 import { moveProduct, toggleProductFlag } from "@/admin/features/products/actions";
 import { BULK_FORM_ID, ProductsBulkBar, ProductsSelectAll } from "@/admin/features/products/bulk-bar";
+import { DeleteProductButton } from "@/admin/features/products/delete-product-button";
 import { getCatalogOptions, listAdminProducts } from "@/admin/features/products/queries";
 import { formatINR, timeAgo } from "@/admin/lib/format";
 import { requirePermission } from "@/admin/server/auth/guard";
@@ -39,6 +40,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   const filtered = Object.values(filters).some(Boolean);
   const [rows, options] = await Promise.all([listAdminProducts(filters), getCatalogOptions()]);
   const canWrite = can(user.role, "products:write");
+  const canDelete = can(user.role, "products:delete");
 
   return (
     <>
@@ -306,6 +308,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                         >
                           <Pencil />
                         </Link>
+                        {canDelete ? <DeleteProductButton id={row.id} name={row.name} compact /> : null}
                       </div>
                     </TD>
                   </tr>

@@ -5,6 +5,8 @@ import path from "node:path";
 
 const read = (name: string) => process.env[name]?.trim() ?? "";
 
+let warnedAuthSecret = false;
+
 /**
  * Typed access to environment configuration. Read lazily (getters) so tests and the dev server
  * always see the current values. Secrets never leave the server.
@@ -41,7 +43,30 @@ export const env = {
   },
   /** Salt for hashing visitor IPs and other non-reversible fingerprints. */
   get authSecret() {
-    return read("AUTH_SECRET") || read("ADMIN_PASSWORD") || "ishita-traders-local-development-secret";
+    const secret = read("AUTH_SECRET");
+    if (!secret && this.isProduction && !warnedAuthSecret) {
+      warnedAuthSecret = true;
+      console.warn("[admin] AUTH_SECRET is not set: using ADMIN_PASSWORD instead. Set a long random AUTH_SECRET.");
+    }
+    return secret || read("ADMIN_PASSWORD") || "ishita-traders-local-development-secret";
+  },
+  get hasAuthSecret() {
+    return Boolean(read("AUTH_SECRET"));
+  },
+  /**
+   * Proxies in front of the app that append to X-Forwarded-For: 1 on Vercel and Hostinger. Raise it
+   * only if another proxy (e.g. a CDN) sits in front of those.
+   */
+  get trustedProxyHops() {
+    const hops = Number.parseInt(read("TRUSTED_PROXY_HOPS"), 10);
+    return Number.isInteger(hops) && hops >= 1 && hops <= 5 ? hops : 1;
+  },
+  /**
+   * Optional header the host's proxy sets to the visitor's address (e.g. x-real-ip), used instead of
+   * X-Forwarded-For. Only for proxies that overwrite it — a header visitors can set themselves isn't safe.
+   */
+  get clientIpHeader() {
+    return read("CLIENT_IP_HEADER").toLowerCase();
   },
   get resendApiKey() {
     return read("RESEND_API_KEY");

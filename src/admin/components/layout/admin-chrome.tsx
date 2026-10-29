@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 
 import logo from "@/assets/images/brand/logo.png";
+import { UnsavedChangesGuard } from "@/admin/components/ui/unsaved-changes-guard";
 import { adminNav, type NavBadge } from "@/admin/config/navigation";
 import { can } from "@/admin/config/permissions";
 import { roleLabels, type Role } from "@/admin/content/types";
@@ -232,6 +233,7 @@ export function AdminChrome({
           {children}
         </main>
       </div>
+      <UnsavedChangesGuard />
     </div>
   );
 }

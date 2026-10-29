@@ -50,7 +50,7 @@ export default async function FaqsPage() {
                       <span className="min-w-0 flex-1">
                         <span className="block font-semibold text-slate-800">{faq.question}</span>
                         <span className="mt-0.5 block truncate text-xs text-slate-500">
-                          {faq.answer || "No answer — opens WhatsApp on the website"}
+                          {faq.answer || "No answer — not shown on the website"}
                         </span>
                       </span>
                       {faq.isPublished ? <Badge tone="leaf">Published</Badge> : <Badge>Hidden</Badge>}

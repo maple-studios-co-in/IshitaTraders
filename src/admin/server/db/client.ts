@@ -53,13 +53,19 @@ async function connect(): Promise<Database> {
  * Normalises a connection string for postgres.js. Neon (and other hosts) add libpq-only options
  * such as `channel_binding`, which postgres.js would forward to the server as a run-time setting —
  * and the server refuses unknown settings, so every connection would fail.
+ *
+ * Remote databases always use `verify-full`: postgres.js treats `require`/`prefer` as "encrypt but
+ * accept any certificate", which lets anyone on the network path between the host and the database
+ * read or change the traffic. Managed hosts such as Neon use publicly trusted certificates.
  */
 export function normaliseDatabaseUrl(raw: string) {
   const url = new URL(raw);
   for (const key of ["channel_binding", "gssencmode", "sslrootcert", "sslcert", "sslkey", "sslcrl"])
     url.searchParams.delete(key);
   const local = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
-  if (!local && !url.searchParams.has("sslmode")) url.searchParams.set("sslmode", "require");
+  const mode = url.searchParams.get("sslmode");
+  if (!local && (!mode || ["prefer", "require", "verify-ca"].includes(mode)))
+    url.searchParams.set("sslmode", "verify-full");
   return url.toString();
 }
 

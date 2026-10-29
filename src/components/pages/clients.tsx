@@ -127,7 +127,7 @@ export function FeaturedStory({ video }: { video: ClientVideo }) {
               fill
               sizes="(min-width: 1440px) 1360px, 100vw"
               placeholder="blur"
-              className="-z-10 scale-[1.12] object-cover"
+              className="-z-10 object-cover object-[center_30%]"
             />
             <span aria-hidden="true" className="absolute inset-0 -z-10 bg-[rgb(15_23_42/0.2)]" />
             {playable ? (

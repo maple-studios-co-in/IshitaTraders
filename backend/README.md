@@ -193,16 +193,25 @@ migrations and `tests/fixtures`, then runs every test. The reset script refuses 
 
 **Settings** (the same on every host):
 
-- `NODE_ENV=production`
-- `TRUST_PROXY=1`
+- `NODE_ENV=production` (also the default when it isn't set)
+- `TRUST_PROXY=1` (also the default in production)
 - `DATABASE_URL`: the website's Neon URL.
-- `CORS_ORIGINS=https://ishita-traders.vercel.app` (plus any other site that should call it).
-- `PUBLIC_SITE_URL=https://ishita-traders.vercel.app`
+- `CORS_ORIGINS`: the website's address(es), e.g. `https://www.example.com,https://example.com` (plus any
+  other site that should call it).
+- `PUBLIC_SITE_URL`: the website's address.
 - `IP_HASH_SECRET`: the website's `AUTH_SECRET`.
 - `ADMIN_API_KEY`: a long random value, only if you need the admin routes.
 
 **Schema changes** are still made in the website (`npm run db:generate` there). Deploy the website
 first, then the API.
+
+### Hostinger
+
+A Node.js web app next to the website's (full walkthrough: [docs/deploy-hostinger.md](../docs/deploy-hostinger.md)).
+
+- **Framework preset:** Express. **Root directory:** `backend`. **Entry file:** `src/server.js`. No build command.
+- **Node.js version:** 22. Hostinger assigns `PORT`; the server listens on it.
+- **Health check:** `/health/ready`.
 
 ### Vercel
 

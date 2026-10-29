@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { controlClass } from "@/admin/components/ui/form-controls";
 import { SubmitButton } from "@/admin/components/ui/submit-button";
@@ -55,14 +55,15 @@ export function PriceEditor({ rows }: { rows: PriceRow[] }) {
   });
 
   const changed = rows.filter((row) => !same(drafts[row.id], original[row.id]));
-  useUnsavedChanges(changed.length > 0);
+  const form = useRef<HTMLFormElement>(null);
+  useUnsavedChanges(changed.length > 0, form);
 
   const patch = (id: string, changes: Partial<Draft>) =>
     setDrafts((current) => ({ ...current, [id]: { ...current[id], ...changes } }));
   const numeric = (value: string) => value.replace(/[^\d]/g, "");
 
   return (
-    <form onSubmit={onSubmit}>
+    <form ref={form} onSubmit={onSubmit}>
       <div className="sticky top-16 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur">
         <p className="text-sm text-slate-600">
           {changed.length ? (

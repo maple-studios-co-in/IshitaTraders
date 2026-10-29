@@ -31,7 +31,7 @@ export const featuredStory = {
   description: "A closer look at how our solutions are making a difference.",
   tag: "Residential Client",
   duration: "03:48",
-  poster: { src: featuredStoryPoster, alt: "A homeowner beside the solar inverter Ishita Traders installed" },
+  poster: { src: featuredStoryPoster, alt: "A homeowner and a technician talking beside rooftop solar panels" },
 };
 
 export const industries = {

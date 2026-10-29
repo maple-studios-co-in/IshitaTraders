@@ -40,6 +40,9 @@ export async function rateLimit(key: string, limit: number, windowSeconds: numbe
   return { ok: count <= limit, remaining: Math.max(0, limit - count), resetAt: row?.resetAt ?? resetAt };
 }
 
+/** Counter of an account's failed sign-ins in the current lock window (from any address). */
+export const loginFailuresKey = (userId: string) => `login:failures:${userId}`;
+
 /** Clears a counter, e.g. after a successful sign-in. */
 export async function resetRateLimit(key: string) {
   const db = await getDb();

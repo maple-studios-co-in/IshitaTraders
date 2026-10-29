@@ -98,8 +98,10 @@ See `.env.example`.
 
 ## Deployment
 
-The homepage is statically prerendered, so it deploys anywhere Next.js runs (Vercel recommended; `next start`
-behind a CDN also works). Set the environment variables above in the hosting dashboard.
+Production runs on **Hostinger** (Node.js web app, Neon database): the step-by-step guide, with every
+setting, environment variable and after-deploy check, is [docs/deploy-hostinger.md](docs/deploy-hostinger.md).
+Anywhere else Next.js runs works too (Vercel, or `next start` behind a CDN): set the environment variables
+above in the hosting dashboard. Production builds need `NEXT_PUBLIC_SITE_URL` (outside Vercel).
 Security headers (HSTS, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy) are set in `next.config.ts`.
 
 ## Open items

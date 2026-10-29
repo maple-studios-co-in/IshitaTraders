@@ -25,8 +25,14 @@ export function sessionCookieName() {
 
 export const SESSION_COOKIE_NAMES = ["__Host-ishita_admin", "ishita_admin"] as const;
 
+/**
+ * On in every production build (sites are served over HTTPS). ADMIN_SECURE_COOKIES=false is only for
+ * trying a production build over plain http on another device; "true" forces it on in development.
+ */
 function secureCookies() {
-  return env.isVercel || process.env.ADMIN_SECURE_COOKIES === "true";
+  const setting = process.env.ADMIN_SECURE_COOKIES?.trim();
+  if (setting === "true" || setting === "false") return setting === "true";
+  return env.isVercel || env.isProduction;
 }
 
 export interface SessionUser {

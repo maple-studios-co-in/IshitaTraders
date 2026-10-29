@@ -1,15 +1,15 @@
 import { and, desc, eq } from "drizzle-orm";
-import { Copy, Trash2 } from "lucide-react";
+import { Copy } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ActionButton } from "@/admin/components/ui/action-button";
-import { ConfirmAction } from "@/admin/components/ui/confirm-action";
 import { Callout, Card, CardHeader, PageHeader } from "@/admin/components/ui/primitives";
 import { can } from "@/admin/config/permissions";
 import { getSiteSettings } from "@/admin/content/settings";
-import { deleteProduct, duplicateProduct } from "@/admin/features/products/actions";
+import { duplicateProduct } from "@/admin/features/products/actions";
+import { DeleteProductButton } from "@/admin/features/products/delete-product-button";
 import { ProductForm } from "@/admin/features/products/product-form";
 import { getAdminProduct, getCatalogOptions } from "@/admin/features/products/queries";
 import { toFormValues } from "@/admin/features/products/to-form-values";
@@ -78,24 +78,7 @@ export default async function EditProductPage({
               <ActionButton action={duplicateProduct} fields={{ id: product.id }} pendingLabel="Copying…">
                 <Copy aria-hidden="true" /> Duplicate
               </ActionButton>
-              {can(user.role, "products:delete") ? (
-                <ConfirmAction
-                  action={deleteProduct}
-                  fields={{ id: product.id, redirectTo: "list" }}
-                  title="Delete this product?"
-                  description={
-                    <>
-                      “{product.name}” will be removed from the website immediately. Enquiries about it are kept. This
-                      can’t be undone — hide it instead if you might sell it again.
-                    </>
-                  }
-                  confirmLabel="Delete product"
-                  variant="danger-ghost"
-                  size="md"
-                >
-                  <Trash2 aria-hidden="true" /> Delete
-                </ConfirmAction>
-              ) : null}
+              {can(user.role, "products:delete") ? <DeleteProductButton id={product.id} name={product.name} /> : null}
             </>
           ) : null
         }

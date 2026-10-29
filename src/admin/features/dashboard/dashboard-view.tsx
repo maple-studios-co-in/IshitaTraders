@@ -34,6 +34,7 @@ import type { SessionUser } from "@/admin/server/auth/session";
 import { getDb } from "@/admin/server/db/client";
 import { users } from "@/admin/server/db/schema";
 import { env } from "@/admin/server/env";
+import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/cn";
 
 import { getDashboardData } from "./queries";
@@ -69,6 +70,18 @@ export async function DashboardView({ user, denied }: { user: SessionUser; denie
       hint: env.databaseUrl
         ? "PostgreSQL is connected."
         : "Using the built-in local database. Add DATABASE_URL (Neon) before going live.",
+      href: "/admin/integrations",
+    },
+    {
+      done: !/\/\/(localhost|127\.0\.0\.1)[:/]?/.test(siteConfig.url),
+      label: "Website address set",
+      hint: `Links, the sitemap and Google use ${siteConfig.url}. Set NEXT_PUBLIC_SITE_URL in the hosting settings and redeploy.`,
+      href: "/admin/seo",
+    },
+    {
+      done: env.hasAuthSecret,
+      label: "Private AUTH_SECRET set",
+      hint: "Add a long random AUTH_SECRET in the hosting settings (otherwise the admin password is used in its place).",
       href: "/admin/integrations",
     },
     {

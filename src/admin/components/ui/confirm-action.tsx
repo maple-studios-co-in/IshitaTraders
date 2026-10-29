@@ -21,6 +21,8 @@ interface ConfirmActionProps {
   confirmVariant?: AdminButtonVariant;
   className?: string;
   ariaLabel?: string;
+  /** Hover hint for icon-only buttons. */
+  tooltip?: string;
   /** Called after the action succeeds (e.g. to close a drawer). */
   onDone?: () => void;
 }
@@ -38,6 +40,7 @@ export function ConfirmAction({
   confirmVariant = "danger",
   className,
   ariaLabel,
+  tooltip,
   onDone,
 }: ConfirmActionProps) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -53,6 +56,7 @@ export function ConfirmAction({
       <button
         type="button"
         aria-label={ariaLabel}
+        title={tooltip}
         className={adminButton({ variant, size, className })}
         onClick={() => dialog.current?.showModal()}
       >

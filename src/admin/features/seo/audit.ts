@@ -1512,7 +1512,7 @@ function checkContent({
         category: "Structured data",
         title: `${unanswered.length} of ${pluralize(faqs.length, "FAQ")} ${unanswered.length === 1 ? "has" : "have"} no answer`,
         detail:
-          "Answered questions expand on the website and can appear as FAQ rich results in Google; unanswered ones only open WhatsApp.",
+          "Answered questions expand on the website and can appear as FAQ rich results in Google; unanswered ones aren’t shown on the website at all.",
         fix: fixes.faqs,
       });
     } else {
