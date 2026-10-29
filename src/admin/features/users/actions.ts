@@ -15,7 +15,7 @@ import type { SessionUser } from "@/admin/server/auth/session";
 import { generateTemporaryPassword } from "@/admin/server/auth/temporary-password";
 import { getDb, type Database } from "@/admin/server/db/client";
 import { sessions, users } from "@/admin/server/db/schema";
-import { resetRateLimit } from "@/admin/server/security/rate-limit";
+import { loginFailuresKey, resetRateLimit } from "@/admin/server/security/rate-limit";
 
 import { LAST_OWNER_MESSAGE, removesActiveOwner, userOperationProblem, type Actor, type UserOperation } from "./rules";
 
@@ -274,7 +274,7 @@ export async function resetUserPassword(_state: ActionState, formData: FormData)
       return { target, revoked: ended.length };
     });
     // Let them sign in straight away with the new password, even after a burst of failed attempts.
-    await resetRateLimit(`login:email:${target.email}`);
+    await resetRateLimit(loginFailuresKey(target.id));
 
     await logActivity(actor, {
       action: "user.reset_password",
@@ -302,7 +302,7 @@ export async function unlockUser(_state: ActionState, formData: FormData): Promi
       await tx.update(users).set({ failedLogins: 0, lockedUntil: null }).where(eq(users.id, target.id));
       return target;
     });
-    await resetRateLimit(`login:email:${target.email}`);
+    await resetRateLimit(loginFailuresKey(target.id));
 
     await logActivity(actor, {
       action: "user.unlock",

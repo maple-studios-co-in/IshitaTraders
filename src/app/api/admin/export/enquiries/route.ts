@@ -9,6 +9,7 @@ import { AuthError, assertPermission } from "@/admin/server/auth/guard";
 import { getDb } from "@/admin/server/db/client";
 import { enquiries } from "@/admin/server/db/schema";
 import { logActivity } from "@/admin/server/audit";
+import { siteConfig } from "@/config/site";
 
 /** Enquiries as a spreadsheet, honouring the list's filters (form, status, search, dates, unread). */
 export async function GET(request: Request) {
@@ -73,7 +74,7 @@ export async function GET(request: Request) {
         row.referrer,
         row.utm.source ?? "",
         row.utm.campaign ?? "",
-        new URL(`/admin/enquiries/${row.id}`, request.url).toString(),
+        `${siteConfig.url}/admin/enquiries/${row.id}`,
       ];
     }),
   );

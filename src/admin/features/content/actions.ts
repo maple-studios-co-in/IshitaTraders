@@ -28,8 +28,12 @@ const sectionSchema = z.enum(settingsKeys as [SettingsKey, ...SettingsKey[]]);
 const permissionFor = (section: SettingsKey): Permission =>
   section === "seo" ? "seo:write" : section === "notifications" ? "integrations:manage" : "content:write";
 
+/** Field names that would reach Object.prototype instead of the settings object. */
+const UNSAFE_KEYS = new Set(["__proto__", "prototype", "constructor"]);
+
 function setPath(target: Record<string, unknown>, path: string, value: unknown) {
   const keys = path.split(".");
+  if (keys.some((key) => UNSAFE_KEYS.has(key))) return;
   let node = target;
   for (const key of keys.slice(0, -1)) {
     if (typeof node[key] !== "object" || node[key] === null) node[key] = {};

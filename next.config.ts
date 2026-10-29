@@ -10,6 +10,19 @@ const lanHosts = Object.values(networkInterfaces())
   .filter((net) => net && net.family === "IPv4" && !net.internal)
   .map((net) => net!.address);
 
+/**
+ * The site's own domain (and its www / bare twin). Server Actions compare the browser's Origin with
+ * the Host header; listing the domain keeps forms working on hosts whose proxy rewrites Host.
+ */
+const siteHosts = (() => {
+  try {
+    const host = new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "").host;
+    return [host, host.startsWith("www.") ? host.slice(4) : `www.${host}`];
+  } catch {
+    return [];
+  }
+})();
+
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
@@ -30,7 +43,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     // Admin forms carry uploaded HTML pages (≤ 2 MB) inside Server Actions.
-    serverActions: { bodySizeLimit: "4mb" },
+    serverActions: { bodySizeLimit: "4mb", allowedOrigins: siteHosts },
   },
   images: {
     formats: ["image/avif", "image/webp"],

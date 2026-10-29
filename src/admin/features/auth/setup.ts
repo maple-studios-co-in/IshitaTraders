@@ -20,9 +20,14 @@ export async function getSetupStatus(): Promise<SetupStatus> {
     if (total > 0) return { state: "ready" };
     return env.adminEmail && env.adminPassword ? { state: "first-sign-in" } : { state: "needs-owner" };
   } catch (error) {
+    // The login page is public: the details (host names, SQL) go to the server log, not the page.
+    console.error("[admin] database check failed", error);
     return {
       state: "database-error",
-      message: error instanceof Error ? error.message : "Check the DATABASE_URL setting.",
+      message:
+        !env.isProduction && error instanceof Error
+          ? error.message
+          : "Check the DATABASE_URL setting in the hosting settings, then reload this page.",
     };
   }
 }
