@@ -70,12 +70,22 @@ export const seedTestimonials = [...clientTestimonials, ...sampleTestimonials];
 export const seedFaqs = [
   {
     question: "What is the estimated budget required for installing a solar project?",
-    answer: "",
+    answer:
+      "It depends on the system size (in kW), whether you choose an on-grid, off-grid or hybrid system, how much battery backup you need, and your roof or site. Share your monthly electricity bill and the appliances you want to run, and we will recommend the right capacity and send you an itemised quotation. For homes, we also prepare the paperwork for the PM Surya Ghar Muft Bijli Yojana rooftop solar subsidy, and we can guide businesses on MSME solar financing options.",
   },
-  { question: "What is the warranty period for the solar panels?", answer: "" },
+  {
+    question: "What is the warranty period for the solar panels?",
+    answer:
+      "UTL solar panels carry a 25-year performance warranty from the manufacturer. The exact product warranty depends on the panel model you choose, and we share the warranty terms with your quotation. Solar inverters and batteries have their own manufacturer warranties — for example, up to 66 months on Exide batteries. We supply only genuine, factory-fresh stock with valid manufacturer warranties.",
+  },
   {
     question: "Which areas do you provide services in, and which solar brands do you install?",
-    answer: "",
+    answer:
+      "We are based in Chakia, East Champaran, and serve homes, businesses and institutions across Bihar. Delivery and rooftop installation are available in Chakia and Motihari; for other locations, call us to confirm. We are an authorised distributor of UTL Solar, Exide and Microtek, and supply and install solar panels, solar inverters, inverter batteries, online UPS systems and complete rooftop solar systems.",
   },
-  { question: "Where is your office located, and do you charge for home visits?", answer: "" },
+  {
+    question: "Where is your office located, and do you charge for home visits?",
+    answer:
+      "Our office is in Chakia, East Champaran, Bihar – 845412. To arrange a home or site visit, call us on 7352405030 and we will fix a convenient time; any visit charge is confirmed when you book.",
+  },
 ];

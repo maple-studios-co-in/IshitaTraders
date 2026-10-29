@@ -12,15 +12,21 @@ import { getDb } from "@/admin/server/db/client";
 import { faqs } from "@/admin/server/db/schema";
 import { moveRow, nextSortOrder } from "@/admin/server/ordering";
 
-const faqSchema = z.object({
-  question: z
-    .string()
-    .trim()
-    .min(8, "Write the question (at least 8 characters).")
-    .max(240, "Keep the question under 240 characters."),
-  answer: z.string().trim().max(2000, "Keep the answer under 2000 characters."),
-  isPublished: z.boolean(),
-});
+const faqSchema = z
+  .object({
+    question: z
+      .string()
+      .trim()
+      .min(8, "Write the question (at least 8 characters).")
+      .max(240, "Keep the question under 240 characters."),
+    answer: z.string().trim().max(2000, "Keep the answer under 2000 characters."),
+    isPublished: z.boolean(),
+  })
+  // The website only shows answered questions, so a published one needs its answer.
+  .refine((faq) => !faq.isPublished || faq.answer.length > 0, {
+    path: ["answer"],
+    message: "Write the answer before publishing — the website only shows answered questions.",
+  });
 
 const idSchema = z.string().uuid();
 
