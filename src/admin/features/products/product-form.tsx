@@ -2,7 +2,7 @@
 
 import { ExternalLink, IndianRupee } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 
 import { Field, FormGrid, FormSection, Input, Select, Textarea, Toggle } from "@/admin/components/ui/form-controls";
 import { SearchPreview } from "@/admin/components/ui/search-preview";
@@ -93,8 +93,9 @@ export function ProductForm({ product, brands, categories, applications, siteUrl
   const [mrp, setMrp] = useState(product?.mrp?.toString() ?? "");
   const [price, setPrice] = useState(product?.price?.toString() ?? "");
   const markDirty = () => setDirty(true);
+  const form = useRef<HTMLFormElement>(null);
 
-  useUnsavedChanges(dirty);
+  useUnsavedChanges(dirty, form);
 
   const specsError = errors.specs ?? Object.entries(errors).find(([key]) => key.startsWith("specs."))?.[1];
   const numericMrp = Number(mrp.replace(/[,\s]/g, ""));
@@ -105,6 +106,7 @@ export function ProductForm({ product, brands, categories, applications, siteUrl
 
   return (
     <form
+      ref={form}
       onSubmit={onSubmit}
       onChange={markDirty}
       className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]"

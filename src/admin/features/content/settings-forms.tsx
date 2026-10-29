@@ -1,7 +1,7 @@
 "use client";
 
 import { ExternalLink, Mail, MessageCircle, Phone, Plus, RotateCcw, Trash2 } from "lucide-react";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useRef, useState, type ReactNode } from "react";
 
 import { Button } from "@/admin/components/ui/button";
 import { ConfirmAction } from "@/admin/components/ui/confirm-action";
@@ -42,12 +42,13 @@ function SettingsForm({
 }) {
   const [dirty, setDirty] = useState(false);
   const { pending, onSubmit, errors } = useFormAction(saveSettings, { onSuccess: () => setDirty(false) });
-  useUnsavedChanges(dirty);
+  const form = useRef<HTMLFormElement>(null);
+  useUnsavedChanges(dirty, form);
   const markDirty = () => setDirty(true);
 
   return (
     <ErrorsContext.Provider value={{ errors, markDirty }}>
-      <form onSubmit={onSubmit} onChange={markDirty} className="flex flex-col gap-5" noValidate>
+      <form ref={form} onSubmit={onSubmit} onChange={markDirty} className="flex flex-col gap-5" noValidate>
         <input type="hidden" name="__section" value={section} />
         <input type="hidden" name="__json" value={json.join(",")} />
         <input type="hidden" name="__bool" value={bools.join(",")} />

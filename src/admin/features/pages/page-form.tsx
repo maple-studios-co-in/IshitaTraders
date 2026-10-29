@@ -102,7 +102,7 @@ export function PageForm({ page, siteUrl }: { page?: EditablePage; siteUrl: stri
     finalSlug !== saved.slug ||
     description !== saved.description ||
     noindex !== saved.noindex;
-  useUnsavedChanges(dirty);
+  useUnsavedChanges(dirty, form);
 
   const { state, pending, onSubmit, errors } = useFormAction(page ? updatePage : createPage, {
     onSuccess: (result) => {
